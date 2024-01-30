@@ -1,0 +1,9 @@
+{
+  "name": "key-7-monorepo",
+  "author": "TGLIDE",
+  "license": "MIT",
+  "scripts": {
+    "docs": "cd docs && npm run docs:dev && cd ..",
+    "lib": "cd lib && npm run dev && cd .."
+  }
+}
