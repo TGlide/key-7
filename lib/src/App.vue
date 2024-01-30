@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { Button } from './lib'
+import { CoolButton } from './lib'
 </script>
 
 <template>
   <main>
-    <Button>Hey</Button>
+    <CoolButton title="title" />
   </main>
 </template>
+
+<style>
+body {
+  color-scheme: dark;
+  background: black;
+}
+</style>

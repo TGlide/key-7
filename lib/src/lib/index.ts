@@ -1,5 +1,3 @@
-import Button from './Button.vue'
+import CoolButton from './CoolButton.vue'
 
-export {
-  Button
-}
+export { CoolButton }
