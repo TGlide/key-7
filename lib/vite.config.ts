@@ -10,6 +10,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/lib/index.ts"),
       name: "Key7",
       fileName: "key-7",
+      formats: ["iife", "es", "umd", "cjs"],
     },
     // rollupOptions: {
     //   external: ["vue"],
@@ -19,7 +20,6 @@ export default defineConfig({
     //     },
     //   },
     // },
-    
   },
   resolve: {
     alias: {
@@ -27,6 +27,6 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env.NODE_ENV': '"production"'
-  }
+    "process.env.NODE_ENV": '"production"',
+  },
 });
