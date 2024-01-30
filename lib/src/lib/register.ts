@@ -1,9 +1,9 @@
 import { defineCustomElement } from "vue";
-import TriStateCheckbox from "./TriStateCheckbox.vue";
+import CommandCenter from "./CommandCenter.vue";
 
 export function register() {
-  const el = defineCustomElement(TriStateCheckbox);
-  customElements.define("tri-state-checkbox", el);
+  const el = defineCustomElement(CommandCenter);
+  customElements.define("command-center", el);
 }
 
 (window as any).registerKey7 = register;

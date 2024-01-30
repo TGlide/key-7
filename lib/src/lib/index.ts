@@ -1,3 +1,4 @@
-import TriStateCheckbox from "./TriStateCheckbox.vue";
+import CommandCenter from "./CommandCenter.vue";
 import { register } from "./register";
-export { TriStateCheckbox, register };
+
+export { CommandCenter, register };
