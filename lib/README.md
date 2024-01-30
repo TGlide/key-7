@@ -11,11 +11,11 @@ script.setAttribute("type", "module");
 script.setAttribute("id", "key-7");
 document.head.appendChild(script);
 
-var script = document.querySelector("#key-7");
 script.addEventListener("load", function () {
   window.registerKey7();
-  const el = document.createElement("tri-state-checkbox");
+  const el = document.createElement("command-center");
   const app = document.querySelector("#app");
   app.prepend(el);
+  console.log("Key 7 loaded!");
 });
 ```

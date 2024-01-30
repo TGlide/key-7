@@ -1,5 +1,5 @@
 import { defineCustomElement } from "vue";
-import CommandCenter from "./components/CommandCenter.vue";
+import CommandCenter from "./components/CommandCenter.ce.vue";
 
 export function register() {
   const el = defineCustomElement(CommandCenter);

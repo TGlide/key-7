@@ -1,17 +1,29 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { CommandCenter } from "./lib";
+import { onMounted, ref } from "vue";
 import { usePlatform } from "./lib/composables/usePlatform";
+import { register } from "./lib";
 
 const { cmd } = usePlatform();
-const open = ref(false);
+
+onMounted(() => {
+  register();
+});
+
+function openCommandCenter() {
+  console.log("open command center");
+  const cmdCenter = document.querySelector("command-center");
+  const dialog = cmdCenter?.shadowRoot?.querySelector("dialog");
+  dialog?.showModal();
+}
 </script>
 
 <template>
   <main>
     <p>Press {{ cmd.label }} + K</p>
-    <button @click="open = true">or just press me, that's fine too!</button>
-    <CommandCenter v-model:open="open" />
+    <button @click="openCommandCenter">
+      or just press me, that's fine too!
+    </button>
+    <command-center ref="" />
   </main>
 </template>
 

@@ -5,34 +5,29 @@ import { commandGroups, useCommandCenter } from "./commands";
 
 const dialog = ref<HTMLDialogElement | null>(null);
 const { cmd } = usePlatform();
-const open = defineModel<boolean>("open");
-
-watch(open, ($open) => {
-  if ($open) {
-    dialog.value?.showModal();
-  } else {
-    dialog.value?.close();
-  }
-});
 
 onMounted(() => {
   window.addEventListener("keydown", (e) => {
     // Toggle on Cmd K
     if (cmd.value.get(e) && e.key === "k") {
       e.preventDefault();
-      open.value = !open.value;
+      if (dialog.value?.open) {
+        dialog.value?.close();
+      } else {
+        dialog.value?.showModal();
+      }
     }
 
     if (e.key === "Escape") {
       e.preventDefault();
-      open.value = false;
+      dialog.value?.close();
     }
   });
 
   dialog.value?.addEventListener("pointerdown", (e) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "DIALOG") {
-      open.value = false;
+      dialog.value?.close();
     }
   });
 });
@@ -54,7 +49,7 @@ useCommandCenter();
             @click="
               () => {
                 command.callback();
-                open = false;
+                dialog?.close();
               }
             "
           >
@@ -105,6 +100,7 @@ dialog {
   }
 
   display: block;
+  inset: 0;
   opacity: 0;
   --scale-from: 0.95;
 
