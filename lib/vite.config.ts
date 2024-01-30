@@ -11,14 +11,14 @@ export default defineConfig({
       name: "Key7",
       fileName: "key-7",
     },
-    rollupOptions: {
-      external: ["vue"],
-      output: {
-        globals: {
-          vue: "Vue",
-        },
-      },
-    },
+    // rollupOptions: {
+    //   external: ["vue"],
+    //   output: {
+    //     globals: {
+    //       vue: "Vue",
+    //     },
+    //   },
+    // },
   },
   resolve: {
     alias: {

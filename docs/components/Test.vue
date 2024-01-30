@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { TriStateCheckbox } from "key-7";
+import { register } from "key-7";
+register();
 </script>
 
 <template>
   <div>
     <span>hi</span>
-    <TriStateCheckbox :model-value="false" />
+    <tri-state-checkbox :model-value="false" />
   </div>
 </template>

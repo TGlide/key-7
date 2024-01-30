@@ -1,2 +1,3 @@
 import TriStateCheckbox from "./TriStateCheckbox.vue";
-export { TriStateCheckbox };
+import { register } from "./register";
+export { TriStateCheckbox, register };
