@@ -23,8 +23,10 @@
     "vue": "^3.3.11"
   },
   "devDependencies": {
+    "@types/node": "^20.11.10",
     "@vitejs/plugin-vue": "^4.5.2",
     "path": "^0.12.7",
+    "sass": "^1.70.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.8",
     "vite-plugin-dts": "^3.7.2",
