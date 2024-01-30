@@ -23,6 +23,9 @@ importers:
 
   lib:
     dependencies:
+      '@fontsource/inter':
+        specifier: ^5.0.16
+        version: 5.0.16
       vue:
         specifier: ^3.3.11
         version: 3.4.15(typescript@5.3.3)
@@ -460,6 +463,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@fontsource/inter@5.0.16:
+    resolution: {integrity: sha512-qF0aH5UiZvCmneX5orJbVRoc2VTyLTV3X/7laMp03Qt28L+B9tFlZODOGUL64wDWc69YVdi1LeJB0cIgd51lvw==}
+    dev: false
 
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}

@@ -1,61 +1,43 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
+import { usePlatform } from "../composables/usePlatform";
+import { commandGroups, useCommandCenter } from "./commands";
 
 const dialog = ref<HTMLDialogElement | null>(null);
-const isMac = ref<boolean>(false);
+const { cmd } = usePlatform();
+const open = defineModel<boolean>("open");
+
+watch(open, ($open) => {
+  if ($open) {
+    dialog.value?.showModal();
+  } else {
+    dialog.value?.close();
+  }
+});
 
 onMounted(() => {
-  isMac.value = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-
   window.addEventListener("keydown", (e) => {
     // Toggle on Cmd K
-    if (e.metaKey && e.key === "k") {
-      const isOpen = dialog.value?.open;
-      if (isOpen) {
-        dialog.value?.close();
-      } else {
-        dialog.value?.showModal();
-      }
+    if (cmd.value.get(e) && e.key === "k") {
+      e.preventDefault();
+      open.value = !open.value;
     }
 
     if (e.key === "Escape") {
-      dialog.value?.close();
+      e.preventDefault();
+      open.value = false;
     }
   });
 
   dialog.value?.addEventListener("pointerdown", (e) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "DIALOG") {
-      dialog.value?.close();
+      open.value = false;
     }
   });
 });
 
-type Command = {
-  label: string;
-  shortcut?: string;
-};
-
-type CommandGroup = {
-  label: string;
-  commands: Command[];
-};
-
-const commands: CommandGroup[] = [
-  {
-    label: "General",
-    commands: [
-      {
-        label: "Add new entity",
-        shortcut: "A+E",
-      },
-      {
-        label: "Add new field",
-        shortcut: "A+F",
-      },
-    ],
-  },
-];
+useCommandCenter();
 </script>
 
 <template>
@@ -64,9 +46,18 @@ const commands: CommandGroup[] = [
       <input type="text" placeholder="Search for commands or fields" />
       <hr />
       <ul>
-        <template v-for="group in commands">
+        <template v-for="group in commandGroups">
           <li class="group">{{ group.label }}</li>
-          <li class="command" v-for="command in group.commands">
+          <li
+            class="command"
+            v-for="command in group.commands"
+            @click="
+              () => {
+                command.callback();
+                open = false;
+              }
+            "
+          >
             <div class="inner">
               <span class="label">{{ command.label }}</span>
               <span class="shortcut" v-if="command.shortcut">
@@ -81,7 +72,7 @@ const commands: CommandGroup[] = [
 </template>
 
 <style scoped lang="scss">
-@import "./colors.scss";
+@import "../styles/colors.scss";
 
 * {
   background: 0;
@@ -98,22 +89,18 @@ dialog {
   @keyframes pop-in {
     0% {
       transform: scale(var(--scale-from));
-      opacity: 0;
     }
     100% {
       transform: scale(1);
-      opacity: 1;
     }
   }
 
   @keyframes pop-out {
     0% {
       transform: scale(1);
-      opacity: 1;
     }
     100% {
       transform: scale(var(--scale-from));
-      opacity: 0;
     }
   }
 
@@ -126,10 +113,12 @@ dialog {
   animation: pop-out 150ms ease-in-out forwards;
   pointer-events: none;
   outline: none;
+  transition: opacity 150ms ease-in-out;
 
   &[open] {
     animation-name: pop-in;
     pointer-events: auto;
+    opacity: 1;
   }
 
   &::backdrop {
@@ -138,7 +127,7 @@ dialog {
 }
 
 .content {
-  width: 40rem;
+  width: min(40rem, 100vw - 3rem);
   max-height: min(100vh, 30rem);
   background-color: $colar-gray-11;
   border-radius: 0.5rem;
@@ -178,6 +167,7 @@ ul {
 
   .command {
     color: white;
+    cursor: pointer;
     font-size: 0.875rem;
     padding-block: 0.125rem; // Give padding so it's still clickable, but looks separated from the group
     padding-inline: 0.5rem;

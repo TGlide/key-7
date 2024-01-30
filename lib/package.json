@@ -20,6 +20,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.0.16",
     "vue": "^3.3.11"
   },
   "devDependencies": {

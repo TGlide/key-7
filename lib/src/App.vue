@@ -1,51 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { CommandCenter } from "./lib";
+import { usePlatform } from "./lib/composables/usePlatform";
 
-const v = ref(false);
-
-onMounted(() => {
-  const iframe = document.querySelector("iframe");
-  const global = iframe?.contentWindow;
-  console.log(global);
-
-  global?.window.addEventListener("load", () => {
-    const script = document.createElement("script");
-    script.setAttribute(
-      "src",
-      "https://cdn.jsdelivr.net/npm/key-7@0.0.4/dist/key-7.js"
-    );
-    script.setAttribute("type", "module");
-    script.setAttribute("id", "key-7");
-    console.log(global?.document.head);
-    global?.parent.document.head.appendChild(script);
-
-    script.addEventListener("load", function () {
-      (global?.window as any)?.registerKey7();
-      const el = document.createElement("tri-state-checkbox");
-      const app = document.querySelector("#app");
-      app?.prepend(el);
-    });
-  });
-});
+const { cmd } = usePlatform();
+const open = ref(false);
 </script>
 
 <template>
   <main>
-    <p>Press ⌘ + K</p>
-    <CommandCenter />
+    <p>Press {{ cmd.label }} + K</p>
+    <button @click="open = true">or just press me, that's fine too!</button>
+    <CommandCenter v-model:open="open" />
   </main>
 </template>
 
-<style scoped>
-p {
-  font-family: "Inter", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  padding: 0;
-}
-
+<style scoped lang="scss">
 main {
   align-items: center;
   display: flex;
@@ -53,5 +23,35 @@ main {
   height: 100vh;
   justify-content: center;
   width: 100vw;
+}
+
+p {
+  font-family: "Inter", sans-serif;
+  font-size: 5rem;
+  opacity: 0.5;
+  font-weight: 800;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  border: none;
+  background: none;
+  color: white;
+  opacity: 0.75;
+  font-size: 0.875rem;
+  margin-block-start: 0.5rem;
+
+  &:hover {
+    cursor: pointer;
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 600px) {
+  p {
+    font-size: 3rem;
+  }
 }
 </style>
