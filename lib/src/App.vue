@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { CoolButton } from './lib'
+import { ref } from "vue";
+import { TriStateCheckbox } from "./lib";
+
+const v = ref(false);
 </script>
 
 <template>
-  <main>
-    <CoolButton title="title" />
-  </main>
+  <TriStateCheckbox v-model:model-value="v" />
 </template>
-
-<style>
-body {
-  color-scheme: dark;
-  background: black;
-}
-</style>

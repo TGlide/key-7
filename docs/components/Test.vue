@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { CoolButton } from "key-7";
+import { TriStateCheckbox } from "key-7";
 </script>
 
 <template>
   <div>
     <span>hi</span>
-    <CoolButton />
+    <TriStateCheckbox :model-value="false" />
   </div>
 </template>

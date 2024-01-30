@@ -1,3 +1,2 @@
-import CoolButton from './CoolButton.vue'
-
-export { CoolButton }
+import TriStateCheckbox from "./TriStateCheckbox.vue";
+export { TriStateCheckbox };
