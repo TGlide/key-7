@@ -1,4 +1,5 @@
-import CommandCenter from "./components/CommandCenter.ce.vue";
-import { register } from "./register";
+import CommandCenter from "./command-center/CommandCenter.ce.vue";
+import { register, CommandCenterElement } from "./register";
 
-export { CommandCenter, register };
+
+export { CommandCenter, CommandCenterElement, register };

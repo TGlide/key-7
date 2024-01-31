@@ -1,9 +1,11 @@
 import { defineCustomElement } from "vue";
-import CommandCenter from "./components/CommandCenter.ce.vue";
+import CommandCenter from "./command-center/CommandCenter.ce.vue";
+
+export const CommandCenterElement = defineCustomElement(CommandCenter);
+
 
 export function register() {
-  const el = defineCustomElement(CommandCenter);
-  customElements.define("command-center", el);
+  customElements.define("command-center", CommandCenterElement);
 }
 
 (window as any).registerKey7 = register;

@@ -1,53 +1,10 @@
-import { onMounted, onUnmounted } from "vue";
+import { Ref, onMounted, onUnmounted, ref } from "vue";
+import { Command, commandGroups } from "./commands";
+import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
-import { isMac } from "../helpers/platform";
-
-export type Shortcut = {
-  keys: string[];
-  cmd?: boolean;
-  alt?: boolean;
-  shift?: boolean;
-};
-
-export type Command = {
-  label: string;
-  shortcut?: Shortcut;
-  callback: () => void;
-};
-
-export type CommandGroup = {
-  label: string;
-  commands: Command[];
-};
-
-export const commandGroups: CommandGroup[] = [
-  {
-    label: "General",
-    commands: [
-      {
-        label: "Add new entity",
-        shortcut: {
-          keys: ["A", "E"],
-        },
-        callback() {
-          console.log("Add new entity");
-        },
-      },
-      {
-        label: "Add new field",
-        shortcut: {
-          keys: ["A", "F"],
-        },
-        callback() {
-          console.log("Add new field");
-        },
-      },
-    ],
-  },
-];
 
 function isInputEvent(event: KeyboardEvent) {
-  return ["INPUT", "TEXTAREA", "SELECT"].includes(
+  return ["INPUT", "TEXTAREA", "SELECT", "COMMAND-CENTER"].includes(
     (event.target as HTMLElement).tagName
   );
 }
@@ -84,10 +41,16 @@ function hasDisputing(command: Command, allCommands: Command[]) {
   });
 }
 
-export function useCommandCenter() {
+type UseCommandCenterArgs = {
+  dialog: Ref<HTMLDialogElement | null>;
+}
+
+export function useCommandCenter({ dialog }: UseCommandCenterArgs) {
+  const { cmd, isMac } = usePlatform();
   const commands = commandGroups.flatMap((group) => group.commands);
   let recentKeyCodes: number[] = [];
   let validCommands: Command[] = [];
+  const highlightedCommand = ref<number | null>(null);
 
   const reset = debounce(() => {
     recentKeyCodes = [];
@@ -150,26 +113,44 @@ export function useCommandCenter() {
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    recentKeyCodes.push(event.keyCode);
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Toggle on Cmd K
+    if (cmd.value.get(e) && e.key === "k") {
+      e.preventDefault();
+      if (dialog.value?.open) {
+        dialog.value?.close();
+      } else {
+        dialog.value?.showModal();
+      }
+      return
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      dialog.value?.close();
+      return
+    }
+
+    // Shortcut handling
+    recentKeyCodes.push(e.keyCode);
     reset();
 
     for (const command of commands) {
       if (!command.shortcut) continue;
 
-      if (isInputEvent(event)) {
+      if (isInputEvent(e)) {
         continue;
       }
 
       const { keys, cmd, shift, alt } = command.shortcut;
 
       const isMetaPressed = cmd
-        ? isMac()
-          ? event.metaKey
-          : event.ctrlKey
-        : !(isMac() ? event.metaKey : event.ctrlKey);
-      const isShiftPressed = shift ? event.shiftKey : !event.shiftKey;
-      const isAltPressed = alt ? event.altKey : !event.altKey;
+        ? isMac.value
+          ? e.metaKey
+          : e.ctrlKey
+        : !(isMac.value ? e.metaKey : e.ctrlKey);
+      const isShiftPressed = shift ? e.shiftKey : !e.shiftKey;
+      const isAltPressed = alt ? e.altKey : !e.altKey;
 
       const commandKeyCodes = keys?.map((key) =>
         key.toUpperCase().charCodeAt(0)
@@ -179,17 +160,36 @@ export function useCommandCenter() {
         : false;
 
       if (allKeysPressed && isMetaPressed && isShiftPressed && isAltPressed) {
-        event.preventDefault();
+        e.preventDefault();
         execute(command);
       }
     }
   };
 
+
+  const handleDialogPointerDown = (e: PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "DIALOG") {
+      dialog.value?.close();
+    }
+  }
+
+  const handleDialogClose = () => {
+    highlightedCommand.value = null;
+  }
+
+
   onMounted(() => {
-    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    dialog.value?.addEventListener("pointerdown", handleDialogPointerDown);
+    dialog.value?.addEventListener("close", handleDialogClose);
   });
 
   onUnmounted(() => {
-    document.removeEventListener("keydown", handleKeyDown);
+    window.removeEventListener("keydown", handleKeyDown);
+    dialog.value?.removeEventListener("pointerdown", handleDialogPointerDown);
+    dialog.value?.removeEventListener("close", handleDialogClose);
   });
+
+  return { highlightedCommand }
 }
