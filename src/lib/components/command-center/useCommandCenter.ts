@@ -184,7 +184,6 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
 
       if (document.activeElement?.tagName === 'COMMAND-CENTER') {
         input.value?.blur();
-        document.body.click();
       }
     })
 

@@ -172,7 +172,8 @@ function getProjectCommands(inputValue: string): Command[] {
         label: `Edit ${el.innerText}`,
         icon: "edit",
         callback() {
-          el.click();
+          const btn = el.querySelector("[role='button']") as HTMLElement | null
+          btn?.click();
         },
       } as Command;
     });
