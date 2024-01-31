@@ -2,6 +2,7 @@ import { Ref, computed, onMounted, onUnmounted, ref } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
 import { isInputEvent } from "../helpers/dom";
+import { format } from "path";
 
 export type Shortcut = {
   keys: string[];
@@ -49,10 +50,12 @@ function exists(selector: keyof typeof selectors) {
   return !!getEl(selector);
 }
 
-function getProjectCommands(): Command[] {
+function getProjectCommands(inputValue: string): Command[] {
   const isSelecting = exists("selectBox");
 
-  return [
+
+
+  const baseCommands = [
     {
       label: "Go home",
       icon: "home",
@@ -90,7 +93,7 @@ function getProjectCommands(): Command[] {
       callback() {
         console.log("Add new field");
         const el = document.querySelector(
-          "[data-test='add-properrty']"
+          "[data-test='add-property']"
         ) as HTMLElement | null;
         el?.click();
       },
@@ -134,18 +137,33 @@ function getProjectCommands(): Command[] {
         },
       ]),
   ].filter(Boolean) as Command[];
+
+
+  const fields = document.querySelectorAll('[data-test="property-header"]')
+  const fieldCommands = Array.from(fields).map((entity) => {
+    const el = entity as HTMLElement;
+    return {
+      label: `Edit ${el.innerText}`,
+      icon: 'edit',
+      callback() {
+        el.click()
+      },
+    } as Command
+  })
+
+  return [...baseCommands, ...fieldCommands];
 }
 
-const getCommands = (): Command[] => {
+const getCommands = (inputValue: string): Command[] => {
   if (window.location.origin !== "https://agidb.v7labs.com") {
-    return [...homeCommands, ...getProjectCommands()];
+    return [...homeCommands, ...getProjectCommands(inputValue)];
   }
 
   if (window.location.pathname.endsWith("/projects")) {
     return [...homeCommands];
   }
 
-  return getProjectCommands();
+  return getProjectCommands(inputValue);
 };
 
 type UseCommandsArgs = {
@@ -153,11 +171,11 @@ type UseCommandsArgs = {
 };
 
 export function useCommands({ inputValue }: UseCommandsArgs) {
-  const commands = ref(getCommands());
+  const commands = ref(getCommands(inputValue.value));
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!isInputEvent(e)) {
-      commands.value = getCommands();
+      commands.value = getCommands(inputValue.value);
     }
   };
 
