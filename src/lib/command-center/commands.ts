@@ -101,7 +101,7 @@ function getProjectCommands(inputValue: string): Command[] {
       },
     ];
 
-  const promptCommands: Command[] = isFocused("prompt")
+  const promptCommands: Command[] = exists("prompt")
     ? [
       {
         label: "Insert template prompt",
