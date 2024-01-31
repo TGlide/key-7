@@ -1,4 +1,4 @@
-import { Ref, computed, onMounted, onUnmounted, ref } from "vue";
+import { Ref, computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
 import { isInputEvent } from "../helpers/dom";
@@ -138,9 +138,7 @@ function getProjectCommands(inputValue: string): Command[] {
       ]),
   ].filter(Boolean) as Command[];
 
-  console.log("inputValue", inputValue);
   if (inputValue) {
-
     const fields = document.querySelectorAll('[data-test="property-header"]');
     const fieldCommands = Array.from(fields).map((entity) => {
       const el = entity as HTMLElement;
@@ -152,7 +150,6 @@ function getProjectCommands(inputValue: string): Command[] {
         },
       } as Command;
     });
-    console.log("inputValue", inputValue, fields, fieldCommands);
 
     return [...baseCommands, ...fieldCommands];
   }
@@ -181,8 +178,18 @@ export function useCommands({ inputValue }: UseCommandsArgs) {
   const commands = ref(getCommands(inputValue.value));
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    commands.value = getCommands(inputValue.value);
+    // ensure that shortcuts are updated
+    if (!isInputEvent(e)) {
+      commands.value = getCommands(inputValue.value);
+    }
   };
+
+  watchEffect(() => {
+    // When the input value changes, update the commands
+    // We need this since we're limiting input events
+    // on the handleKeyDown function
+    commands.value = getCommands(inputValue.value);
+  });
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
