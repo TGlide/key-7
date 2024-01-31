@@ -7,12 +7,14 @@ import Icon from "../icon/Icon.vue";
 import { Message, useChat } from "ai/vue";
 import { panel } from "./commands";
 import { useCommandCenter } from "./useCommandCenter";
+import { isInProjectPage, getProjectFields, getProjectEntities } from "./route";
 
 const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
-    content: "Hello, how can I help you?",
+    content:
+      "Hello, how can I help you? I may answer you questions about your AGIDB project.",
   },
 ];
 
@@ -24,6 +26,27 @@ const { append, isLoading, messages } = useChat({
 watchEffect(() => {
   if (panel.value !== "ai") {
     messages.value = [...initialMessages];
+  } else if (messages.value.length <= 1) {
+    let systemContent = `You're an assistant for V7's new tool, AGIDB.`;
+    systemContent += isInProjectPage()
+      ? `\nYou're currently in the project page.`
+      : `\nYou're currently in the home page.`;
+    if (isInProjectPage()) {
+      systemContent += `\nProject information:`;
+      systemContent += `\n\tFields: ${getProjectFields().join(", ")}`;
+      systemContent += `\n\tEntities:`;
+      getProjectEntities().forEach((entity) => {
+        systemContent += `\n\t\t${entity[0]}: ${entity.slice(1).join(", ")}`;
+      });
+      systemContent += `\n\nThe user can ask you questions about the project.`;
+    }
+
+    const systemMessage: Message = {
+      id: "0",
+      role: "system",
+      content: systemContent,
+    };
+    messages.value = [...initialMessages, systemMessage];
   }
 });
 
@@ -133,6 +156,7 @@ function handleInputKeydown(e: KeyboardEvent) {
     switch (e.key) {
       case "Enter": {
         e.preventDefault();
+
         append({
           role: "user",
           content: inputValue.value,
@@ -221,7 +245,9 @@ function handleInputKeydown(e: KeyboardEvent) {
                 <p
                   class="message"
                   :data-origin="message.role"
-                  v-for="message in messages"
+                  v-for="message in messages.filter(
+                    ({ role }) => role !== 'system'
+                  )"
                 >
                   {{ message.content }}
                 </p>

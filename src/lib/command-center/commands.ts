@@ -1,6 +1,7 @@
 import { Ref, computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
+import { isInProjectPage } from "./route";
 
 export type Shortcut = {
   keys: string[];
@@ -16,7 +17,6 @@ export type Command = {
   callback: () => void;
   keepOpen?: boolean;
 };
-
 
 const selectors = {
   selectAll:
@@ -204,8 +204,7 @@ const getCommands = (inputValue: string): Command[] => {
     return [...homeCommands, ...getProjectCommands(inputValue)];
   }
 
-  const projectPattern = /https:\/\/agidb\.v7labs\.com\/.*?\/projects\/.+/;
-  if (window.location.href.match(projectPattern)) {
+  if (isInProjectPage()) {
     return getProjectCommands(inputValue);
   }
 
