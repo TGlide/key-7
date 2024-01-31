@@ -26,7 +26,22 @@ const selectors = {
   createProject: "div.shrink-0:nth-child(2)",
   lastEntity: '[data-test^="row-"]:last-child',
   deleteSelected: '[data-test="action-bar-delete-button"]',
+  prompt: "h4 + div textarea",
+  fieldName: "input[aria-label='Name']",
 } as const;
+
+function getEl(selector: keyof typeof selectors) {
+  return document.querySelector(selectors[selector]) as HTMLElement | null;
+}
+
+function exists(selector: keyof typeof selectors) {
+  return !!getEl(selector);
+}
+
+function isFocused(selector: keyof typeof selectors) {
+  const el = getEl(selector);
+  return el === document.activeElement;
+}
 
 const homeCommands: Command[] = [
   {
@@ -43,29 +58,69 @@ const homeCommands: Command[] = [
   },
 ];
 
-function getEl(selector: keyof typeof selectors) {
-  return document.querySelector(selectors[selector]) as HTMLElement | null;
-}
-
-function exists(selector: keyof typeof selectors) {
-  return !!getEl(selector);
-}
-
 function getProjectCommands(inputValue: string): Command[] {
   const selectBox = getEl("selectBox");
   const allSelected = selectBox?.getAttribute("aria-checked") === "true";
 
-  const baseCommands = [
-    {
-      label: "Go home",
-      icon: "home",
-      shortcut: {
-        keys: ["G", "H"],
+  const selectedCommands: Command[] = allSelected
+    ? [
+      {
+        label: "Clear selection",
+        icon: "close",
+        shortcut: {
+          keys: ["C", "S"],
+        },
+        callback() {
+          const el = getEl("selectAll");
+          el?.click();
+        },
       },
-      callback() {
-        window.location.href = "https://agidb.v7labs.com/";
+      {
+        label: "Delete selected",
+        icon: "trash",
+        shortcut: {
+          keys: ["D", "S"],
+        },
+        callback() {
+          const el = getEl("deleteSelected");
+          el?.click();
+        },
       },
-    },
+    ]
+    : [
+      {
+        label: "Select all",
+        icon: "check",
+        shortcut: {
+          keys: ["S", "A"],
+        },
+        callback() {
+          const el = getEl("selectAll");
+          el?.click();
+        },
+      },
+    ];
+
+  const promptCommands: Command[] = isFocused("prompt")
+    ? [
+      {
+        label: "Insert template prompt",
+        icon: "edit",
+        callback() {
+          const el = getEl("prompt") as HTMLTextAreaElement | null;
+          if (!el) return;
+          const name = getEl("fieldName") as HTMLInputElement | null;
+          if (!name) return;
+
+          const template = `Reply with ${name.value} only. Do not say any extra info, the reply should be exclusively an objective answer without extra padding.`;
+          el.value = template;
+        },
+      },
+    ]
+    : [];
+
+  const baseCommands: Array<Command> = [
+    ...promptCommands,
     {
       label: "Add new entity",
       icon: "add",
@@ -98,45 +153,18 @@ function getProjectCommands(inputValue: string): Command[] {
         el?.click();
       },
     },
-    ...(allSelected
-      ? [
-        {
-          label: "Clear selection",
-          icon: "close",
-          shortcut: {
-            keys: ["C", "S"],
-          },
-          callback() {
-            const el = getEl("selectAll");
-            el?.click();
-          },
-        },
-        {
-          label: "Delete selected",
-          icon: "trash",
-          shortcut: {
-            keys: ["D", "S"],
-          },
-          callback() {
-            const el = getEl("deleteSelected");
-            el?.click();
-          },
-        },
-      ]
-      : [
-        {
-          label: "Select all",
-          icon: "check",
-          shortcut: {
-            keys: ["S", "A"],
-          },
-          callback() {
-            const el = getEl("selectAll");
-            el?.click();
-          },
-        },
-      ]),
-  ].filter(Boolean) as Command[];
+    {
+      label: "Go home",
+      icon: "home",
+      shortcut: {
+        keys: ["G", "H"],
+      },
+      callback() {
+        window.location.href = "https://agidb.v7labs.com/";
+      },
+    },
+    ...selectedCommands,
+  ];
 
   if (inputValue) {
     const fields = document.querySelectorAll('[data-test="property-header"]');
