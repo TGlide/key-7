@@ -44,12 +44,12 @@ function hasDisputing(command: Command, allCommands: Command[]) {
 type UseCommandCenterArgs = {
   dialog: Ref<HTMLDialogElement | null>;
   input: Ref<HTMLInputElement | null>;
-}
+};
 
 export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
   const platform = usePlatform();
   let recentKeyCodes: number[] = [];
-  const commands = ref(getCommands())
+  const commands = ref(getCommands());
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
 
@@ -123,13 +123,13 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
       } else {
         dialog.value?.showModal();
       }
-      return
+      return;
     }
 
     if (e.key === "Escape") {
       e.preventDefault();
       dialog.value?.close();
-      return
+      return;
     }
 
     // Shortcut handling
@@ -145,7 +145,9 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
 
       const { keys, cmd, shift, alt } = command.shortcut;
 
-      const isMetaPressed = cmd ? platform.cmd.value.get(e) : !platform.cmd.value.get(e);
+      const isMetaPressed = cmd
+        ? platform.cmd.value.get(e)
+        : !platform.cmd.value.get(e);
       const isShiftPressed = shift ? e.shiftKey : !e.shiftKey;
       const isAltPressed = alt ? e.altKey : !e.altKey;
 
@@ -163,44 +165,41 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
     }
   };
 
-
   const handleDialogPointerDown = (e: PointerEvent) => {
     const target = e.target as HTMLElement;
     if (target.tagName === "DIALOG") {
       dialog.value?.close();
     }
-  }
-
-  // mutation observer on dialog open
-  let dialogObserver: MutationObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === "attributes" && mutation.attributeName === "open") {
-        if (dialog.value?.open) {
-          commands.value = getCommands()
-        }
-      }
-    });
-  })
+  };
 
   const handleDialogClose = () => {
     highlightedCommand.value = null;
-    input.value?.blur()
-  }
+    input.value?.blur();
+  };
 
+  // mutation observer on url change
+  let windowObserver: MutationObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "attributes" && mutation.attributeName === "href") {
+        commands.value = getCommands();
+      }
+    });
+  });
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     dialog.value?.addEventListener("pointerdown", handleDialogPointerDown);
     dialog.value?.addEventListener("close", handleDialogClose);
-    dialog.value && dialogObserver.observe(dialog.value, { attributes: true });
+
+    windowObserver.observe(document.body, { childList: true, subtree: true });
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
     dialog.value?.removeEventListener("pointerdown", handleDialogPointerDown);
     dialog.value?.removeEventListener("close", handleDialogClose);
-    dialogObserver.disconnect();
+    windowObserver.disconnect();
   });
 
-  return { highlightedCommand, commands }
+  return { highlightedCommand, commands };
 }

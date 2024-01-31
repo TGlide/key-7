@@ -91,7 +91,7 @@ function handleInputKeydown(e: KeyboardEvent) {
     <div class="content">
       <input
         type="text"
-        placeholder="Search for commands or fields"
+        placeholder="Search for commands"
         ref="input"
         @keydown="handleInputKeydown"
         v-model="value"
