@@ -1,7 +1,5 @@
-import { Ref, onMounted, onUnmounted } from "vue";
-import { debounce } from "../helpers/debounce";
+import { sleep } from "../helpers/sleep";
 
-import { usePlatform } from "../composables/usePlatform";
 
 export type Shortcut = {
   keys: string[];
@@ -30,8 +28,14 @@ export const commandGroups: CommandGroup[] = [
         shortcut: {
           keys: ["A", "E"],
         },
-        callback() {
-          console.log("Add new entity");
+        async callback() {
+          document.querySelector("[data-test='add-entity']")?.dispatchEvent(new MouseEvent("click"));
+          await sleep(150)
+          // get last data-test="row-n"
+          const lastRow = document.querySelector("[data-test^='row-']:last-child");
+          const firstCell = lastRow?.querySelector("[data-test^='cell-']");
+          firstCell?.dispatchEvent(new MouseEvent("click"));
+          console.log("Add new entity - new");
         },
       },
       {
