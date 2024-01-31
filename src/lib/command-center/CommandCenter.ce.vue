@@ -23,6 +23,20 @@ const { append, isLoading, messages } = useChat({
   initialMessages,
 });
 
+const dialog = ref<HTMLDialogElement | null>(null);
+const input = ref<HTMLInputElement | null>(null);
+const inputValue = ref("");
+
+const ul = ref<HTMLElement | null>(null);
+const innerContent = ref<HTMLElement | null>(null);
+const innerContentHeight = ref(0);
+
+watchEffect(function autoFocusInput() {
+  if (dialog.value?.open && !isLoading.value) {
+    input.value?.focus();
+  }
+});
+
 watchEffect(() => {
   if (panel.value !== "ai") {
     messages.value = [...initialMessages];
@@ -34,8 +48,9 @@ watchEffect(() => {
     if (isInProjectPage()) {
       systemContent += `\nProject information:`;
       systemContent += `\n\tFields: ${getProjectFields().join(", ")}`;
-      systemContent += `\n\tEntities:`;
-      getProjectEntities().forEach((entity) => {
+      const entities = getProjectEntities();
+      systemContent += `\n\tEntities (Showing 50 at max, total is ${entities.length}):`;
+      entities.slice(0, 50).forEach((entity) => {
         systemContent += `\n\t\t${entity[0]}: ${entity.slice(1).join(", ")}`;
       });
       systemContent += `\n\nThe user can ask you questions about the project.`;
@@ -50,13 +65,6 @@ watchEffect(() => {
   }
 });
 
-const dialog = ref<HTMLDialogElement | null>(null);
-const input = ref<HTMLInputElement | null>(null);
-const inputValue = ref("");
-
-const ul = ref<HTMLElement | null>(null);
-const innerContent = ref<HTMLElement | null>(null);
-const innerContentHeight = ref(0);
 useRafFn(() => {
   if (innerContent.value) {
     innerContentHeight.value = +getComputedStyle(
