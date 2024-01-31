@@ -21,7 +21,7 @@ useRafFn(() => {
   }
 });
 const smoothHeight = computed(() => {
-  return clamp(50, ulHeight.value, 300);
+  return clamp(60, ulHeight.value, 300);
 });
 
 const { cmd, isMac } = usePlatform();
@@ -106,50 +106,55 @@ function handleInputKeydown(e: KeyboardEvent) {
       />
       <hr />
       <div class="smooth-height" :style="`--height: ${smoothHeight}px`">
-        <ul v-if="filteredCommands.length" ref="ul">
-          <li
-            class="command"
-            v-for="(command, i) in filteredCommands"
-            :data-highlighted="highlightedCommand === i"
-            @click="
-              () => {
-                command.callback();
-                dialog?.close();
-              }
-            "
-            @mouseover="() => (highlightedCommand = i)"
-            @mouseleave="() => (highlightedCommand = null)"
-          >
-            <div class="inner">
-              <div class="start">
-                <Icon :icon="command.icon" />
-                <span class="label">{{ command.label }}</span>
-              </div>
-              <div class="shortcut" v-if="command.shortcut">
-                <kbd class="kbd" v-if="command.shortcut.cmd">
-                  {{ cmd.label }}
-                </kbd>
-                <kbd class="kbd" v-if="command.shortcut.shift">
-                  {{ isMac ? "⇧" : "Shift" }}
-                </kbd>
-                <kbd class="kbd" v-if="command.shortcut.alt">
-                  {{ isMac ? "⌥" : "Alt" }}
-                </kbd>
-                <template v-if="command.shortcut">
-                  <template v-for="(key, i) in command.shortcut.keys" :key="i">
-                    <kbd class="kbd">
-                      {{ key.toUpperCase() }}
-                    </kbd>
-                    <span v-if="i !== command.shortcut.keys.length - 1">
-                      then
-                    </span>
+        <div class="immediate-height" :style="`height: ${smoothHeight}px`">
+          <ul v-if="filteredCommands.length" ref="ul">
+            <li
+              class="command"
+              v-for="(command, i) in filteredCommands"
+              :data-highlighted="highlightedCommand === i"
+              @click="
+                () => {
+                  command.callback();
+                  dialog?.close();
+                }
+              "
+              @mouseover="() => (highlightedCommand = i)"
+              @mouseleave="() => (highlightedCommand = null)"
+            >
+              <div class="inner">
+                <div class="start">
+                  <Icon :icon="command.icon" />
+                  <span class="label">{{ command.label }}</span>
+                </div>
+                <div class="shortcut" v-if="command.shortcut">
+                  <kbd class="kbd" v-if="command.shortcut.cmd">
+                    {{ cmd.label }}
+                  </kbd>
+                  <kbd class="kbd" v-if="command.shortcut.shift">
+                    {{ isMac ? "⇧" : "Shift" }}
+                  </kbd>
+                  <kbd class="kbd" v-if="command.shortcut.alt">
+                    {{ isMac ? "⌥" : "Alt" }}
+                  </kbd>
+                  <template v-if="command.shortcut">
+                    <template
+                      v-for="(key, i) in command.shortcut.keys"
+                      :key="i"
+                    >
+                      <kbd class="kbd">
+                        {{ key.toUpperCase() }}
+                      </kbd>
+                      <span v-if="i !== command.shortcut.keys.length - 1">
+                        then
+                      </span>
+                    </template>
                   </template>
-                </template>
+                </div>
               </div>
-            </div>
-          </li>
-        </ul>
-        <p class="empty" v-else>No results found</p>
+            </li>
+          </ul>
+          <p class="empty" v-else>No results found</p>
+        </div>
       </div>
     </div>
   </dialog>
@@ -245,6 +250,11 @@ hr {
   height: var(--height);
   transition: height 100ms ease;
   overflow-y: hidden;
+}
+
+.immediate-height {
+  height: var(--height);
+  overflow-y: auto;
 }
 
 ul {

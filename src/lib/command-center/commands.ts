@@ -136,7 +136,7 @@ function getProjectCommands(): Command[] {
 
 const getCommands = (): Command[] => {
   if (window.location.origin !== "https://agidb.v7labs.com") {
-    return [...homeCommands, ...getProjectCommands()];
+    return [...homeCommands, ...homeCommands, ...homeCommands, ...homeCommands, ...getProjectCommands()];
   }
 
   if (window.location.pathname.endsWith("/projects")) {
