@@ -1,2 +1,1 @@
-export type Icon = 'add'
-export { }
+export type Icon = 'add' | 'home'

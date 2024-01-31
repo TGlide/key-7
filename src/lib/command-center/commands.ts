@@ -70,12 +70,23 @@ const homeCommands: Command[] = [
 ]
 const projectCommands: Command[] = [
   {
+    label: 'Go home',
+    icon: 'home',
+    shortcut: {
+      keys: ['G', 'H'],
+    },
+    callback() {
+      window.location.href = 'https://agidb.v7labs.com/'
+    },
+  },
+  {
     label: "Add new entity",
     icon: "add",
     shortcut: {
       keys: ["A", "E"],
     },
     async callback() {
+      console.log("Add new entity");
       document
         .querySelector("[data-test='add-entity']")
         ?.dispatchEvent(new MouseEvent("click"));
@@ -84,9 +95,8 @@ const projectCommands: Command[] = [
       const lastRow = document.querySelector(
         "[data-test^='row-']:last-child"
       );
-      const firstCell = lastRow?.querySelector("[data-test^='cell-']");
-      firstCell?.dispatchEvent(new MouseEvent("click"));
-      console.log("Add new entity - new");
+      const firstCell = lastRow?.querySelector("[data-test^='cell-']") as HTMLElement | null;
+      firstCell?.click()
     },
   },
   {
@@ -97,6 +107,8 @@ const projectCommands: Command[] = [
     },
     callback() {
       console.log("Add new field");
+      const el = document.querySelector("[data-test='add-properrty']") as HTMLElement | null
+      el?.click()
     },
   },
 ];
