@@ -1,5 +1,5 @@
 import { computed, onMounted, ref } from "vue";
-import { isMac as getIsMac } from "../helpers/platform";
+import { isMac as getIsMac } from "@/lib/helpers/platform";
 
 export function usePlatform() {
   const isMac = ref(false);

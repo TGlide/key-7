@@ -1,15 +1,44 @@
 <script setup lang="ts">
 import { useRafFn } from "@vueuse/core";
 import { computed, ref, watch, watchEffect } from "vue";
-import { usePlatform } from "../composables/usePlatform";
-import { clamp } from "../helpers/clamp";
-import Icon from "../icon/Icon.vue";
+import { usePlatform } from "@/lib/composables/usePlatform";
+import { clamp } from "@/lib/helpers/clamp";
+import Icon from "@/lib/components/icon/Icon.vue";
 import { Message, useChat } from "ai/vue";
-import { panel } from "./commands";
+import { panel } from "./panel";
 import { useCommandCenter } from "./useCommandCenter";
-import { isInProjectPage, getProjectFields, getProjectEntities } from "./route";
-import { sleep } from "../helpers/sleep";
+import {
+  isInProjectPage,
+  getProjectFields,
+  getProjectEntities,
+} from "./project";
+import { sleep } from "@/lib/helpers/sleep";
 
+/* Element Refs */
+const dialog = ref<HTMLDialogElement | null>(null);
+const input = ref<HTMLInputElement | null>(null);
+const inputValue = ref("");
+
+const ul = ref<HTMLElement | null>(null);
+const innerContent = ref<HTMLElement | null>(null);
+const innerContentHeight = ref(0);
+const scrollContainer = ref<HTMLElement | null>(null);
+
+/* Animations */
+useRafFn(() => {
+  if (innerContent.value) {
+    innerContentHeight.value = +getComputedStyle(
+      innerContent.value!
+    )?.height?.replace("px", "");
+  } else {
+    innerContentHeight.value = 0;
+  }
+});
+const smoothHeight = computed(() => {
+  return clamp(52, innerContentHeight.value, 300);
+});
+
+/* AI */
 const initialMessages: Message[] = [
   {
     id: "1",
@@ -24,15 +53,6 @@ const { append, isLoading, messages } = useChat({
   initialMessages,
 });
 
-const dialog = ref<HTMLDialogElement | null>(null);
-const input = ref<HTMLInputElement | null>(null);
-const inputValue = ref("");
-
-const ul = ref<HTMLElement | null>(null);
-const innerContent = ref<HTMLElement | null>(null);
-const innerContentHeight = ref(0);
-const scrollContainer = ref<HTMLElement | null>(null);
-
 watch(isLoading, function autoFocusInput($isLoading) {
   if (dialog.value?.open && !$isLoading) {
     sleep(100).then(() => {
@@ -41,7 +61,8 @@ watch(isLoading, function autoFocusInput($isLoading) {
   }
 });
 
-watch(messages, function autoScroll() {
+watch(messages, function autoScrollChat() {
+  if (panel.value !== "ai") return;
   scrollContainer.value?.scrollTo({
     top: scrollContainer.value?.scrollHeight,
     behavior: "smooth",
@@ -56,7 +77,7 @@ watch(messages, function autoScroll() {
   });
 });
 
-watchEffect(() => {
+watchEffect(function setInitialMessages() {
   if (panel.value !== "ai") {
     messages.value = [...initialMessages];
   } else if (messages.value.length <= 1) {
@@ -84,19 +105,7 @@ watchEffect(() => {
   }
 });
 
-useRafFn(() => {
-  if (innerContent.value) {
-    innerContentHeight.value = +getComputedStyle(
-      innerContent.value!
-    )?.height?.replace("px", "");
-  } else {
-    innerContentHeight.value = 0;
-  }
-});
-const smoothHeight = computed(() => {
-  return clamp(52, innerContentHeight.value, 300);
-});
-
+/* Commands */
 const { cmd, isMac } = usePlatform();
 const { highlightedCommand, commands } = useCommandCenter({
   dialog,
@@ -221,6 +230,7 @@ function handleInputKeydown(e: KeyboardEvent) {
           ref="scrollContainer"
         >
           <div class="inner-content" ref="innerContent">
+            <!-- Commands -->
             <template v-if="panel === 'default'">
               <ul v-if="commands.length" ref="ul">
                 <li
@@ -271,6 +281,7 @@ function handleInputKeydown(e: KeyboardEvent) {
               </ul>
               <p class="empty" v-else>No results found</p>
             </template>
+            <!-- AI -->
             <template v-else>
               <div class="messages" v-if="messages.length">
                 <p
@@ -294,7 +305,7 @@ function handleInputKeydown(e: KeyboardEvent) {
 
 <style scoped lang="scss">
 @use "sass:color";
-@import "../styles/colors.scss";
+@import "../../styles/colors.scss";
 
 * {
   background: 0;

@@ -1,10 +1,11 @@
-import { Ref, onMounted, onUnmounted, ref, watchEffect } from "vue";
-import { usePlatform } from "../composables/usePlatform";
-import { debounce } from "../helpers/debounce";
-import { Command, panel, useCommands } from "./commands";
-import { isInputEvent } from "../helpers/dom";
-import { sleep } from "../helpers/sleep";
-
+import { Ref, onMounted, onUnmounted, ref } from "vue";
+import { usePlatform } from "@/lib/composables/usePlatform";
+import { debounce } from "@/lib/helpers/debounce";
+import { isInputEvent } from "@/lib/helpers/dom";
+import { sleep } from "@/lib/helpers/sleep";
+import { Command, } from "./commands";
+import { useCommands } from "./useCommands";
+import { panel } from "./panel";
 
 function getCommandRank(command: Command) {
   if (!command.shortcut) return 0;

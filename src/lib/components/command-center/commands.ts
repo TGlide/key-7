@@ -1,7 +1,8 @@
-import { Ref, computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
-import { sleep } from "../helpers/sleep";
+import { sleep } from "@/lib/helpers/sleep";
 import { Icon } from "../icon/types";
-import { isInProjectPage } from "./route";
+import { panel } from "./panel";
+import { isInProjectPage } from "./project";
+import { exists, getEl } from "./selectors";
 
 export type Shortcut = {
   keys: string[];
@@ -18,31 +19,6 @@ export type Command = {
   keepOpen?: boolean;
 };
 
-const selectors = {
-  selectAll:
-    "div:nth-child(1) > div:nth-child(1) > label:nth-child(1) > button",
-  selectBox: "div.rounded-xl:nth-child(3)",
-  addEntity: '[data-test="add-entity"]',
-  createProject: "div.shrink-0:nth-child(2)",
-  lastEntity: '[data-test^="row-"]:last-child',
-  deleteSelected: '[data-test="action-bar-delete-button"]',
-  prompt: "h4 + div textarea",
-  fieldName: "input[aria-label='Name']",
-} as const;
-
-function getEl(selector: keyof typeof selectors) {
-  return document.querySelector(selectors[selector]) as HTMLElement | null;
-}
-
-function exists(selector: keyof typeof selectors) {
-  return !!getEl(selector);
-}
-
-function isFocused(selector: keyof typeof selectors) {
-  const el = getEl(selector);
-  return el === document.activeElement;
-}
-
 const homeCommands: Command[] = [
   {
     label: "Create new project",
@@ -57,9 +33,6 @@ const homeCommands: Command[] = [
     },
   },
 ];
-
-type Panel = "default" | "ai";
-export const panel = ref<Panel>("default");
 
 const clear: Command = {
   label: "Clear selection",
@@ -210,7 +183,7 @@ function getProjectCommands(inputValue: string): Command[] {
   return [...baseCommands];
 }
 
-const getCommands = (inputValue: string): Command[] => {
+export function getCommands(inputValue: string): Command[] {
   if (window.location.origin !== "https://agidb.v7labs.com") {
     return [...homeCommands, ...getProjectCommands(inputValue)];
   }
@@ -220,45 +193,4 @@ const getCommands = (inputValue: string): Command[] => {
   }
 
   return [...homeCommands];
-};
-
-type UseCommandsArgs = {
-  inputValue: Ref<string>;
-};
-
-export function useCommands({ inputValue }: UseCommandsArgs) {
-  const commands = ref(getCommands(inputValue.value));
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    // ensure that shortcuts are updated
-    commands.value = getCommands(inputValue.value);
-  };
-
-  watchEffect(() => {
-    // When the input value changes, update the commands
-    // We need this to ocassionally avoid racing conditions
-    commands.value = getCommands(inputValue.value);
-  });
-
-  onMounted(() => {
-    window.addEventListener("keydown", handleKeyDown);
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener("keydown", handleKeyDown);
-  });
-
-  const filteredCommands = computed(() => {
-    return commands.value.filter((command) => {
-      return (
-        command.label.toLowerCase().includes(inputValue.value.toLowerCase()) ||
-        command.shortcut?.keys
-          .join(" ")
-          .toLowerCase()
-          .includes(inputValue.value.toLowerCase())
-      );
-    });
-  });
-
-  return filteredCommands;
 }
