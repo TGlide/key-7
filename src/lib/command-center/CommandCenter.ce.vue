@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { clamp } from "../helpers/clamp";
 import Icon from "../icon/Icon.vue";
+import { useRafFn } from "@vueuse/core";
 
 import { useCommandCenter } from "./useCommandCenter";
 
@@ -11,7 +12,14 @@ const dialog = ref<HTMLDialogElement | null>(null);
 const input = ref<HTMLInputElement | null>(null);
 
 const ul = ref<HTMLUListElement | null>(null);
-const { height: ulHeight } = useElementBounding(ul);
+const ulHeight = ref(0);
+useRafFn(() => {
+  if (ul.value) {
+    ulHeight.value = +getComputedStyle(ul.value!)?.height?.replace("px", "");
+  } else {
+    ulHeight.value = 0;
+  }
+});
 const smoothHeight = computed(() => {
   return clamp(50, ulHeight.value, 300);
 });

@@ -2,12 +2,7 @@ import { Ref, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
 import { Command, useCommands } from "./commands";
-
-function isInputEvent(event: KeyboardEvent) {
-  return ["INPUT", "TEXTAREA", "SELECT", "COMMAND-CENTER"].includes(
-    (event.target as HTMLElement).tagName
-  );
-}
+import { isInputEvent } from "../helpers/dom";
 
 function getCommandRank(command: Command) {
   if (!command.shortcut) return 0;

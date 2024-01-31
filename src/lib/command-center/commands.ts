@@ -1,6 +1,7 @@
 import { Ref, onMounted, onUnmounted, ref } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
+import { isInputEvent } from "../helpers/dom";
 
 export type Shortcut = {
   keys: string[];
@@ -152,29 +153,18 @@ type UseCommandsArgs = {
 export function useCommands({ dialog }: UseCommandsArgs) {
   const commands = ref(getCommands());
 
-  let prevUrl = "";
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (window.location.href !== prevUrl) {
+    if (!isInputEvent(e)) {
       commands.value = getCommands();
-      prevUrl = window.location.href;
     }
   };
 
-  let dialogObserver = new MutationObserver((mutations) => {
-    // check if open
-    if (mutations[0]?.attributeName === "open") {
-      commands.value = getCommands();
-    }
-  });
-
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
-    dialog.value && dialogObserver.observe(dialog.value, { attributes: true });
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
-    dialogObserver.disconnect();
   });
 
   return commands;
