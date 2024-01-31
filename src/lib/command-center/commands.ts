@@ -19,7 +19,8 @@ export type Command = {
 };
 
 const selectors = {
-  selectAll: "div:nth-child(1) > div:nth-child(1) > label:nth-child(1)",
+  selectAll:
+    "div:nth-child(1) > div:nth-child(1) > label:nth-child(1) > button",
   selectBox: "div.rounded-xl:nth-child(3)",
   addEntity: '[data-test="add-entity"]',
   createProject: "div.shrink-0:nth-child(2)",
@@ -51,9 +52,8 @@ function exists(selector: keyof typeof selectors) {
 }
 
 function getProjectCommands(inputValue: string): Command[] {
-  const isSelecting = exists("selectBox");
-
-
+  const selectBox = getEl("selectBox");
+  const allSelected = selectBox?.getAttribute("aria-checked") === "true";
 
   const baseCommands = [
     {
@@ -98,11 +98,11 @@ function getProjectCommands(inputValue: string): Command[] {
         el?.click();
       },
     },
-    ...(isSelecting
+    ...(allSelected
       ? [
         {
           label: "Clear selection",
-          icon: 'close',
+          icon: "close",
           shortcut: {
             keys: ["C", "S"],
           },
@@ -113,7 +113,7 @@ function getProjectCommands(inputValue: string): Command[] {
         },
         {
           label: "Delete selected",
-          icon: 'trash',
+          icon: "trash",
           shortcut: {
             keys: ["D", "S"],
           },
@@ -126,7 +126,7 @@ function getProjectCommands(inputValue: string): Command[] {
       : [
         {
           label: "Select all",
-          icon: 'check',
+          icon: "check",
           shortcut: {
             keys: ["S", "A"],
           },
@@ -138,23 +138,26 @@ function getProjectCommands(inputValue: string): Command[] {
       ]),
   ].filter(Boolean) as Command[];
 
+  console.log("inputValue", inputValue);
   if (inputValue) {
-    const fields = document.querySelectorAll('[data-test="property-header"]')
+
+    const fields = document.querySelectorAll('[data-test="property-header"]');
     const fieldCommands = Array.from(fields).map((entity) => {
       const el = entity as HTMLElement;
       return {
         label: `Edit ${el.innerText}`,
-        icon: 'edit',
+        icon: "edit",
         callback() {
-          el.click()
+          el.click();
         },
-      } as Command
-    })
+      } as Command;
+    });
+    console.log("inputValue", inputValue, fields, fieldCommands);
 
     return [...baseCommands, ...fieldCommands];
   }
 
-  return baseCommands;
+  return [...baseCommands];
 }
 
 const getCommands = (inputValue: string): Command[] => {
@@ -162,11 +165,12 @@ const getCommands = (inputValue: string): Command[] => {
     return [...homeCommands, ...getProjectCommands(inputValue)];
   }
 
-  if (window.location.pathname.endsWith("/projects")) {
-    return [...homeCommands];
+  const projectPattern = /https:\/\/agidb\.v7labs\.com\/.*?\/projects\/.+/;
+  if (window.location.href.match(projectPattern)) {
+    return getProjectCommands(inputValue);
   }
 
-  return getProjectCommands(inputValue);
+  return [...homeCommands];
 };
 
 type UseCommandsArgs = {
