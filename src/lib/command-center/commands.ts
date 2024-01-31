@@ -62,7 +62,7 @@ type Panel = "default" | "ai";
 export const panel = ref<Panel>("default");
 
 function getProjectCommands(inputValue: string): Command[] {
-  const selected = getEl("selectBox")?.getAttribute("aria-checked");
+  const selected = getEl("selectAll")?.getAttribute("aria-checked");
   const allSelected = selected === "true";
   const hasSelected = !!selected && selected !== "false";
 
@@ -118,7 +118,10 @@ function getProjectCommands(inputValue: string): Command[] {
 
           const template = `Reply with ${name.value} only. Do not say any extra info, the reply should be exclusively an objective answer without extra padding.`;
           el.value = template;
+          // send a input event to trigger the vue update
+          el.dispatchEvent(new Event("input", { bubbles: true }));
           el.click();
+
           el.focus();
         },
       },

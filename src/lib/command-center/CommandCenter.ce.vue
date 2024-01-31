@@ -33,10 +33,8 @@ const innerContent = ref<HTMLElement | null>(null);
 const innerContentHeight = ref(0);
 
 watch(isLoading, function autoFocusInput($isLoading) {
-  console.log("hey");
   if (dialog.value?.open && !$isLoading) {
     sleep(10).then(() => {
-      console.log("focus");
       input.value?.focus();
     });
   }
