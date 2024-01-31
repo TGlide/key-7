@@ -35,14 +35,20 @@ const scrollContainer = ref<HTMLElement | null>(null);
 
 watch(isLoading, function autoFocusInput($isLoading) {
   if (dialog.value?.open && !$isLoading) {
-    sleep(10).then(() => {
+    sleep(100).then(() => {
       input.value?.focus();
     });
   }
 });
 
 watch(messages, function autoScroll() {
-  sleep(10).then(() => {
+  scrollContainer.value?.scrollTo({
+    top: scrollContainer.value?.scrollHeight,
+    behavior: "smooth",
+  });
+
+  // In case DOM has not updated by the time the scroll is called
+  sleep(100).then(() => {
     scrollContainer.value?.scrollTo({
       top: scrollContainer.value?.scrollHeight,
       behavior: "smooth",
