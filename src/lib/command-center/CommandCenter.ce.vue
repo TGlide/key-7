@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRafFn } from "@vueuse/core";
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { clamp } from "../helpers/clamp";
 import Icon from "../icon/Icon.vue";
@@ -8,6 +8,7 @@ import { Message, useChat } from "ai/vue";
 import { panel } from "./commands";
 import { useCommandCenter } from "./useCommandCenter";
 import { isInProjectPage, getProjectFields, getProjectEntities } from "./route";
+import { sleep } from "../helpers/sleep";
 
 const initialMessages: Message[] = [
   {
@@ -31,9 +32,13 @@ const ul = ref<HTMLElement | null>(null);
 const innerContent = ref<HTMLElement | null>(null);
 const innerContentHeight = ref(0);
 
-watchEffect(function autoFocusInput() {
-  if (dialog.value?.open && !isLoading.value) {
-    input.value?.focus();
+watch(isLoading, function autoFocusInput($isLoading) {
+  console.log("hey");
+  if (dialog.value?.open && !$isLoading) {
+    sleep(10).then(() => {
+      console.log("focus");
+      input.value?.focus();
+    });
   }
 });
 
