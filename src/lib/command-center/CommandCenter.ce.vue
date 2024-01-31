@@ -442,9 +442,11 @@ kbd {
   .message {
     $radius: 0.5rem;
     background-color: color.adjust($colar-gray-12, $alpha: -0.5);
+    color: white;
     border-radius: $radius;
     border-bottom-left-radius: 0;
     padding: 1rem;
+    font-size: 14px;
 
     max-width: min(80%, 25rem);
 
