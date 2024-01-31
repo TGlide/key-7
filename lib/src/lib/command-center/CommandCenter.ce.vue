@@ -1,14 +1,42 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { commandGroups } from "./commands";
 import { useCommandCenter } from "./useCommandCenter";
+import { useElementBounding } from "@vueuse/core";
+import { clamp } from "../helpers/clamp";
 
 const dialog = ref<HTMLDialogElement | null>(null);
+const ul = ref<HTMLUListElement | null>(null);
+const { height: ulHeight } = useElementBounding(ul);
+const smoothHeight = computed(() => {
+  return clamp(50, ulHeight.value, 300);
+});
 
 const { cmd, isMac } = usePlatform();
-
-const { highlightedCommand } = useCommandCenter({ dialog });
+const { highlightedCommand } = useCommandCenter({
+  dialog,
+  commands: commandGroups.flatMap((group) => group.commands),
+});
+const value = ref("");
+const filteredGroups = computed(() => {
+  return commandGroups
+    .map((group) => {
+      return {
+        ...group,
+        commands: group.commands.filter((command) => {
+          return (
+            command.label.toLowerCase().includes(value.value.toLowerCase()) ||
+            command.shortcut?.keys
+              .join(" ")
+              .toLowerCase()
+              .includes(value.value.toLowerCase())
+          );
+        }),
+      };
+    })
+    .filter((group) => group.commands.length > 0);
+});
 
 function handleInputKeydown(e: KeyboardEvent) {
   const totalCommands = commandGroups.reduce(
@@ -78,51 +106,58 @@ function handleInputKeydown(e: KeyboardEvent) {
         placeholder="Search for commands or fields"
         ref="input"
         @keydown="handleInputKeydown"
+        v-model="value"
       />
       <hr />
-      <ul>
-        <template v-for="group in commandGroups">
-          <li class="group">{{ group.label }}</li>
-          <li
-            class="command"
-            v-for="(command, i) in group.commands"
-            :data-highlighted="highlightedCommand === i"
-            @click="
-              () => {
-                command.callback();
-                dialog?.close();
-              }
-            "
-            @mouseover="() => (highlightedCommand = i)"
-            @mouseleave="() => (highlightedCommand = null)"
-          >
-            <div class="inner">
-              <span class="label">{{ command.label }}</span>
-              <div class="shortcut" v-if="command.shortcut">
-                <kbd class="kbd" v-if="command.shortcut.cmd">
-                  {{ cmd.label }}
-                </kbd>
-                <kbd class="kbd" v-if="command.shortcut.shift">
-                  {{ isMac ? "⇧" : "Shift" }}
-                </kbd>
-                <kbd class="kbd" v-if="command.shortcut.alt">
-                  {{ isMac ? "⌥" : "Alt" }}
-                </kbd>
-                <template v-if="command.shortcut">
-                  <template v-for="(key, i) in command.shortcut.keys" :key="i">
-                    <kbd class="kbd">
-                      {{ key.toUpperCase() }}
-                    </kbd>
-                    <span v-if="i !== command.shortcut.keys.length - 1">
-                      then
-                    </span>
+      <div class="smooth-height" :style="`--height: ${smoothHeight}px`">
+        <ul v-if="filteredGroups.length" ref="ul">
+          <template v-for="group in filteredGroups">
+            <li class="group">{{ group.label }}</li>
+            <li
+              class="command"
+              v-for="(command, i) in group.commands"
+              :data-highlighted="highlightedCommand === i"
+              @click="
+                () => {
+                  command.callback();
+                  dialog?.close();
+                }
+              "
+              @mouseover="() => (highlightedCommand = i)"
+              @mouseleave="() => (highlightedCommand = null)"
+            >
+              <div class="inner">
+                <span class="label">{{ command.label }}</span>
+                <div class="shortcut" v-if="command.shortcut">
+                  <kbd class="kbd" v-if="command.shortcut.cmd">
+                    {{ cmd.label }}
+                  </kbd>
+                  <kbd class="kbd" v-if="command.shortcut.shift">
+                    {{ isMac ? "⇧" : "Shift" }}
+                  </kbd>
+                  <kbd class="kbd" v-if="command.shortcut.alt">
+                    {{ isMac ? "⌥" : "Alt" }}
+                  </kbd>
+                  <template v-if="command.shortcut">
+                    <template
+                      v-for="(key, i) in command.shortcut.keys"
+                      :key="i"
+                    >
+                      <kbd class="kbd">
+                        {{ key.toUpperCase() }}
+                      </kbd>
+                      <span v-if="i !== command.shortcut.keys.length - 1">
+                        then
+                      </span>
+                    </template>
                   </template>
-                </template>
+                </div>
               </div>
-            </div>
-          </li>
-        </template>
-      </ul>
+            </li>
+          </template>
+        </ul>
+        <p class="empty" v-else>No results found</p>
+      </div>
     </div>
   </dialog>
 </template>
@@ -163,6 +198,8 @@ dialog {
 
   display: block;
   inset: 0;
+  margin-inline: auto;
+  margin-block-start: min(40vh, 35rem);
   opacity: 0;
   --scale-from: 0.95;
 
@@ -209,6 +246,12 @@ input {
 hr {
   border: none;
   border-bottom: 1px solid $colar-gray-10;
+}
+
+.smooth-height {
+  height: var(--height);
+  transition: height 100ms ease;
+  overflow: hidden;
 }
 
 ul {
@@ -270,5 +313,11 @@ kbd {
   background-color: color.adjust($colar-gray-10, $alpha: -0.5);
   border-radius: 0.25rem;
   border: 1px solid $colar-gray-8;
+}
+
+.empty {
+  text-align: center;
+  color: $colar-gray-6;
+  margin-block: 1rem;
 }
 </style>

@@ -43,11 +43,11 @@ function hasDisputing(command: Command, allCommands: Command[]) {
 
 type UseCommandCenterArgs = {
   dialog: Ref<HTMLDialogElement | null>;
+  commands: Command[];
 }
 
-export function useCommandCenter({ dialog }: UseCommandCenterArgs) {
+export function useCommandCenter({ dialog, commands }: UseCommandCenterArgs) {
   const { cmd, isMac } = usePlatform();
-  const commands = commandGroups.flatMap((group) => group.commands);
   let recentKeyCodes: number[] = [];
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
@@ -176,6 +176,8 @@ export function useCommandCenter({ dialog }: UseCommandCenterArgs) {
 
   const handleDialogClose = () => {
     highlightedCommand.value = null;
+    // focus the body so that the next keydown event is captured
+    document.body.focus();
   }
 
 

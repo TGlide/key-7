@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.16",
+    "@vueuse/core": "^10.7.2",
     "vue": "^3.3.11"
   },
   "devDependencies": {
