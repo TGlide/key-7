@@ -1,7 +1,7 @@
 import { Ref, onMounted, onUnmounted, ref } from "vue";
-import { Command, commandGroups } from "./commands";
 import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
+import { Command, getCommands } from "./commands";
 
 function isInputEvent(event: KeyboardEvent) {
   return ["INPUT", "TEXTAREA", "SELECT", "COMMAND-CENTER"].includes(
@@ -44,12 +44,12 @@ function hasDisputing(command: Command, allCommands: Command[]) {
 type UseCommandCenterArgs = {
   dialog: Ref<HTMLDialogElement | null>;
   input: Ref<HTMLInputElement | null>;
-  commands: Command[];
 }
 
-export function useCommandCenter({ dialog, input, commands }: UseCommandCenterArgs) {
+export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
   const platform = usePlatform();
   let recentKeyCodes: number[] = [];
+  const commands = ref(getCommands())
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
 
@@ -105,7 +105,7 @@ export function useCommandCenter({ dialog, input, commands }: UseCommandCenterAr
   }, 200);
 
   const execute = (command: Command) => {
-    if (hasDisputing(command, commands)) {
+    if (hasDisputing(command, commands.value)) {
       validCommands.push(command);
       rankAndExecute();
     } else {
@@ -136,7 +136,7 @@ export function useCommandCenter({ dialog, input, commands }: UseCommandCenterAr
     recentKeyCodes.push(e.keyCode);
     reset();
 
-    for (const command of commands) {
+    for (const command of commands.value) {
       if (!command.shortcut) continue;
 
       if (isInputEvent(e)) {
@@ -171,24 +171,29 @@ export function useCommandCenter({ dialog, input, commands }: UseCommandCenterAr
     }
   }
 
+  const handleDialogOpen = () => {
+    commands.value = getCommands();
+  }
+
   const handleDialogClose = () => {
     highlightedCommand.value = null;
     input.value?.blur()
-
   }
 
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     dialog.value?.addEventListener("pointerdown", handleDialogPointerDown);
+    dialog.value?.addEventListener("open", handleDialogOpen);
     dialog.value?.addEventListener("close", handleDialogClose);
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
     dialog.value?.removeEventListener("pointerdown", handleDialogPointerDown);
+    dialog.value?.removeEventListener("open", handleDialogOpen);
     dialog.value?.removeEventListener("close", handleDialogClose);
   });
 
-  return { highlightedCommand }
+  return { highlightedCommand, commands }
 }
