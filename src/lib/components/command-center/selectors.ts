@@ -6,7 +6,7 @@ export const selectors = {
   createProject: "div.shrink-0:nth-child(2)",
   lastEntity: '[data-test^="row-"]:last-child',
   deleteSelected: '[data-test="action-bar-delete-button"]',
-  prompt: "h4 + div textarea",
+  prompt: "[aria-label='Set a prompt']",
   fieldName: "input[aria-label='Name']",
 } as const;
 
