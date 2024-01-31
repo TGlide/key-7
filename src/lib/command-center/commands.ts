@@ -181,9 +181,7 @@ export function useCommands({ inputValue }: UseCommandsArgs) {
   const commands = ref(getCommands(inputValue.value));
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!isInputEvent(e)) {
-      commands.value = getCommands(inputValue.value);
-    }
+    commands.value = getCommands(inputValue.value);
   };
 
   onMounted(() => {
