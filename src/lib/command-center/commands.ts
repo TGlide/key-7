@@ -1,8 +1,6 @@
 import { Ref, computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
-import { isInputEvent } from "../helpers/dom";
-import { format } from "path";
 
 export type Shortcut = {
   keys: string[];
@@ -16,7 +14,9 @@ export type Command = {
   icon: Icon;
   shortcut?: Shortcut;
   callback: () => void;
+  keepOpen?: boolean;
 };
+
 
 const selectors = {
   selectAll:
@@ -58,8 +58,8 @@ const homeCommands: Command[] = [
   },
 ];
 
-type Panel = "home" | "ai";
-export const panel = ref<Panel>("home");
+type Panel = "default" | "ai";
+export const panel = ref<Panel>("default");
 
 function getProjectCommands(inputValue: string): Command[] {
   const selected = getEl("selectBox")?.getAttribute("aria-checked");
@@ -132,6 +132,7 @@ function getProjectCommands(inputValue: string): Command[] {
       callback() {
         panel.value = "ai";
       },
+      keepOpen: true,
     },
     ...promptCommands,
     {

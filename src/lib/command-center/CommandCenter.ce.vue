@@ -1,28 +1,50 @@
 <script setup lang="ts">
-import { useElementBounding } from "@vueuse/core";
+import { useRafFn } from "@vueuse/core";
 import { computed, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { clamp } from "../helpers/clamp";
 import Icon from "../icon/Icon.vue";
-import { useRafFn } from "@vueuse/core";
-
+import { Message, useChat } from "ai/vue";
+import { panel } from "./commands";
 import { useCommandCenter } from "./useCommandCenter";
+
+const initialMessages: Message[] = [
+  {
+    id: "1",
+    role: "assistant",
+    content: "Hello, how can I help you?",
+  },
+];
+
+const { append, isLoading, messages } = useChat({
+  api: "https://www.thomasglopes.com/ai",
+  initialMessages,
+});
+
+watchEffect(() => {
+  if (panel.value !== "ai") {
+    messages.value = [...initialMessages];
+  }
+});
 
 const dialog = ref<HTMLDialogElement | null>(null);
 const input = ref<HTMLInputElement | null>(null);
 const inputValue = ref("");
 
-const ul = ref<HTMLUListElement | null>(null);
-const ulHeight = ref(0);
+const ul = ref<HTMLElement | null>(null);
+const innerContent = ref<HTMLElement | null>(null);
+const innerContentHeight = ref(0);
 useRafFn(() => {
-  if (ul.value) {
-    ulHeight.value = +getComputedStyle(ul.value!)?.height?.replace("px", "");
+  if (innerContent.value) {
+    innerContentHeight.value = +getComputedStyle(
+      innerContent.value!
+    )?.height?.replace("px", "");
   } else {
-    ulHeight.value = 0;
+    innerContentHeight.value = 0;
   }
 });
 const smoothHeight = computed(() => {
-  return clamp(60, ulHeight.value, 300);
+  return clamp(52, innerContentHeight.value, 300);
 });
 
 const { cmd, isMac } = usePlatform();
@@ -32,7 +54,7 @@ const { highlightedCommand, commands } = useCommandCenter({
   inputValue,
 });
 
-watchEffect(() => {
+watchEffect(function controlHighlight() {
   input.value;
   if (!commands.value.length) {
     highlightedCommand.value = null;
@@ -46,64 +68,78 @@ watchEffect(() => {
   }
 });
 
-watchEffect(() => {
-  // scroll to highlighted command
-  if (highlightedCommand.value !== null && ul.value) {
-    const highlightedCommandEl = ul.value.children[
-      highlightedCommand.value
-    ] as HTMLLIElement;
-    highlightedCommandEl.scrollIntoView({
-      block: "nearest",
-    });
-  }
-});
-
 function handleInputKeydown(e: KeyboardEvent) {
   const totalCommands = commands.value.length;
 
-  switch (e.key) {
-    case "ArrowDown": {
-      e.preventDefault();
-      if (highlightedCommand.value === null) {
+  if (panel.value === "default") {
+    switch (e.key) {
+      case "ArrowDown": {
+        e.preventDefault();
+        if (highlightedCommand.value === null) {
+          highlightedCommand.value = 0;
+        } else {
+          highlightedCommand.value = Math.min(
+            highlightedCommand.value + 1,
+            totalCommands - 1
+          );
+        }
+        break;
+      }
+
+      case "ArrowUp": {
+        e.preventDefault();
+        if (highlightedCommand.value === null) {
+          highlightedCommand.value = totalCommands - 1;
+        } else {
+          highlightedCommand.value = Math.max(highlightedCommand.value - 1, 0);
+        }
+        break;
+      }
+
+      case "Enter": {
+        e.preventDefault();
+        if (highlightedCommand.value !== null) {
+          const command = commands.value[highlightedCommand.value];
+          command?.callback();
+          if (!command.keepOpen) {
+            dialog.value?.close();
+          }
+        }
+        break;
+      }
+
+      case "Home": {
+        e.preventDefault();
         highlightedCommand.value = 0;
-      } else {
-        highlightedCommand.value = Math.min(
-          highlightedCommand.value + 1,
-          totalCommands - 1
-        );
+        break;
       }
-      break;
-    }
 
-    case "ArrowUp": {
-      e.preventDefault();
-      if (highlightedCommand.value === null) {
+      case "End": {
+        e.preventDefault();
         highlightedCommand.value = totalCommands - 1;
-      } else {
-        highlightedCommand.value = Math.max(highlightedCommand.value - 1, 0);
+        break;
       }
-      break;
     }
 
-    case "Enter": {
-      e.preventDefault();
-      if (highlightedCommand.value !== null) {
-        commands.value[highlightedCommand.value].callback();
-        dialog.value?.close();
+    if (highlightedCommand.value !== null && ul.value) {
+      const highlightedCommandEl = ul.value.children[
+        highlightedCommand.value
+      ] as HTMLLIElement;
+      highlightedCommandEl.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  } else if (panel.value === "ai") {
+    switch (e.key) {
+      case "Enter": {
+        e.preventDefault();
+        append({
+          role: "user",
+          content: inputValue.value,
+        });
+        inputValue.value = "";
+        break;
       }
-      break;
-    }
-
-    case "Home": {
-      e.preventDefault();
-      highlightedCommand.value = 0;
-      break;
-    }
-
-    case "End": {
-      e.preventDefault();
-      highlightedCommand.value = totalCommands - 1;
-      break;
     }
   }
 }
@@ -114,7 +150,14 @@ function handleInputKeydown(e: KeyboardEvent) {
     <div class="content">
       <input
         type="text"
-        placeholder="Search for commands"
+        :placeholder="
+          panel === 'default'
+            ? 'Search for commands'
+            : isLoading
+            ? 'AI is thinking...'
+            : 'Ask our AI'
+        "
+        :disabled="isLoading"
         ref="input"
         @keydown="handleInputKeydown"
         v-model="inputValue"
@@ -122,53 +165,70 @@ function handleInputKeydown(e: KeyboardEvent) {
       <hr />
       <div class="smooth-height" :style="`--height: ${smoothHeight}px`">
         <div class="immediate-height" :style="`height: ${smoothHeight}px`">
-          <ul v-if="commands.length" ref="ul">
-            <li
-              class="command"
-              v-for="(command, i) in commands"
-              :data-highlighted="highlightedCommand === i"
-              @click="
-                () => {
-                  command.callback();
-                  dialog?.close();
-                }
-              "
-              @mouseover="() => (highlightedCommand = i)"
-              @mouseleave="() => (highlightedCommand = null)"
-            >
-              <div class="inner">
-                <div class="start">
-                  <Icon :icon="command.icon" />
-                  <span class="label">{{ command.label }}</span>
-                </div>
-                <div class="shortcut" v-if="command.shortcut">
-                  <kbd class="kbd" v-if="command.shortcut.cmd">
-                    {{ cmd.label }}
-                  </kbd>
-                  <kbd class="kbd" v-if="command.shortcut.shift">
-                    {{ isMac ? "⇧" : "Shift" }}
-                  </kbd>
-                  <kbd class="kbd" v-if="command.shortcut.alt">
-                    {{ isMac ? "⌥" : "Alt" }}
-                  </kbd>
-                  <template v-if="command.shortcut">
-                    <template
-                      v-for="(key, i) in command.shortcut.keys"
-                      :key="i"
-                    >
-                      <kbd class="kbd">
-                        {{ key.toUpperCase() }}
+          <div class="inner-content" ref="innerContent">
+            <template v-if="panel === 'default'">
+              <ul v-if="commands.length" ref="ul">
+                <li
+                  class="command"
+                  v-for="(command, i) in commands"
+                  :data-highlighted="highlightedCommand === i"
+                  @click="
+                    () => {
+                      command.callback();
+                      if (!command.keepOpen) {
+                        dialog?.close();
+                      }
+                    }
+                  "
+                  @mouseover="() => (highlightedCommand = i)"
+                >
+                  <div class="inner">
+                    <div class="start">
+                      <Icon :icon="command.icon" />
+                      <span class="label">{{ command.label }}</span>
+                    </div>
+                    <div class="shortcut" v-if="command.shortcut">
+                      <kbd class="kbd" v-if="command.shortcut.cmd">
+                        {{ cmd.label }}
                       </kbd>
-                      <span v-if="i !== command.shortcut.keys.length - 1">
-                        then
-                      </span>
-                    </template>
-                  </template>
-                </div>
+                      <kbd class="kbd" v-if="command.shortcut.shift">
+                        {{ isMac ? "⇧" : "Shift" }}
+                      </kbd>
+                      <kbd class="kbd" v-if="command.shortcut.alt">
+                        {{ isMac ? "⌥" : "Alt" }}
+                      </kbd>
+                      <template v-if="command.shortcut">
+                        <template
+                          v-for="(key, i) in command.shortcut.keys"
+                          :key="i"
+                        >
+                          <kbd class="kbd">
+                            {{ key.toUpperCase() }}
+                          </kbd>
+                          <span v-if="i !== command.shortcut.keys.length - 1">
+                            then
+                          </span>
+                        </template>
+                      </template>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <p class="empty" v-else>No results found</p>
+            </template>
+            <template v-else>
+              <div class="messages" v-if="messages.length">
+                <p
+                  class="message"
+                  :data-origin="message.role"
+                  v-for="message in messages"
+                >
+                  {{ message.content }}
+                </p>
               </div>
-            </li>
-          </ul>
-          <p class="empty" v-else>No results found</p>
+              <p class="empty" v-else>Ask our AI a question!</p>
+            </template>
+          </div>
         </div>
       </div>
     </div>
@@ -216,6 +276,7 @@ dialog {
   opacity: 0;
   --scale-from: 0.95;
 
+  backdrop-filter: blur(32px);
   border: none;
   box-shadow: 0px 16px 32px 0px color.adjust($colar-gray-12, $alpha: -0.75);
 
@@ -239,7 +300,6 @@ dialog {
   width: min(40rem, 100vw - 3rem);
   max-height: min(100vh, 30rem);
   background-color: color.adjust($colar-gray-11, $alpha: -0.375);
-  backdrop-filter: blur(32px);
   border-radius: 0.5rem;
   border: 1px solid $colar-gray-10;
 }
@@ -344,5 +404,30 @@ kbd {
   text-align: center;
   color: $colar-gray-6;
   margin-block: 1rem;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block: 2rem;
+  padding-inline: 1rem;
+
+  .message {
+    $radius: 0.5rem;
+    background-color: color.adjust($colar-gray-12, $alpha: -0.5);
+    border-radius: $radius;
+    border-bottom-left-radius: 0;
+    padding: 1rem;
+
+    max-width: min(80%, 25rem);
+
+    &[data-origin="user"] {
+      background-color: $colar-blue-8;
+      border-bottom-left-radius: $radius;
+      border-bottom-right-radius: 0;
+      align-self: flex-end;
+    }
+  }
 }
 </style>

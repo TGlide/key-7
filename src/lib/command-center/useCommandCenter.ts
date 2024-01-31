@@ -5,6 +5,7 @@ import { Command, panel, useCommands } from "./commands";
 import { isInputEvent } from "../helpers/dom";
 import { sleep } from "../helpers/sleep";
 
+
 function getCommandRank(command: Command) {
   if (!command.shortcut) return 0;
   const { keys, cmd, shift, alt } = command.shortcut;
@@ -126,7 +127,11 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
 
     if (e.key === "Escape") {
       e.preventDefault();
-      dialog.value?.close();
+      if (panel.value === 'ai') {
+        panel.value = 'default'
+      } else {
+        dialog.value?.close();
+      }
       return;
     }
 
@@ -171,10 +176,10 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
   };
 
   const handleDialogClose = () => {
-    highlightedCommand.value = null;
     sleep(150).then(() => {
+      highlightedCommand.value = null;
       inputValue.value = "";
-      panel.value = 'home'
+      panel.value = 'default'
 
       if (document.activeElement?.tagName === 'COMMAND-CENTER') {
         input.value?.blur();
@@ -183,6 +188,7 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
     })
 
   };
+
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
