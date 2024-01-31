@@ -171,9 +171,16 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
     }
   }
 
-  const handleDialogOpen = () => {
-    commands.value = getCommands();
-  }
+  // mutation observer on dialog open
+  let dialogObserver: MutationObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "attributes" && mutation.attributeName === "open") {
+        if (dialog.value?.open) {
+          commands.value = getCommands()
+        }
+      }
+    });
+  })
 
   const handleDialogClose = () => {
     highlightedCommand.value = null;
@@ -184,15 +191,15 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     dialog.value?.addEventListener("pointerdown", handleDialogPointerDown);
-    dialog.value?.addEventListener("open", handleDialogOpen);
     dialog.value?.addEventListener("close", handleDialogClose);
+    dialog.value && dialogObserver.observe(dialog.value, { attributes: true });
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
     dialog.value?.removeEventListener("pointerdown", handleDialogPointerDown);
-    dialog.value?.removeEventListener("open", handleDialogOpen);
     dialog.value?.removeEventListener("close", handleDialogClose);
+    dialogObserver.disconnect();
   });
 
   return { highlightedCommand, commands }
