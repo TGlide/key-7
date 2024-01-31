@@ -1,7 +1,7 @@
 import { Ref, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
-import { Command, getCommands } from "./commands";
+import { Command, useCommands } from "./commands";
 
 function isInputEvent(event: KeyboardEvent) {
   return ["INPUT", "TEXTAREA", "SELECT", "COMMAND-CENTER"].includes(
@@ -49,7 +49,7 @@ type UseCommandCenterArgs = {
 export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
   const platform = usePlatform();
   let recentKeyCodes: number[] = [];
-  const commands = ref(getCommands());
+  const commands = useCommands({ dialog })
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
 
@@ -114,13 +114,8 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
     }
   };
 
-  let prevUrl = "";
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (window.location.href !== prevUrl) {
-      commands.value = getCommands();
-      prevUrl = window.location.href;
-    }
 
+  const handleKeyDown = (e: KeyboardEvent) => {
     // Toggle on Cmd K
     if (platform.cmd.value.get(e) && e.key === "k") {
       e.preventDefault();
