@@ -61,49 +61,57 @@ const homeCommands: Command[] = [
 type Panel = "default" | "ai";
 export const panel = ref<Panel>("default");
 
+const clear: Command = {
+  label: "Clear selection",
+  icon: "close",
+  shortcut: {
+    keys: ["C", "S"],
+  },
+  callback() {
+    const el = getEl("selectAll");
+    el?.click();
+  },
+};
+
+const selectAll: Command = {
+  label: "Select all",
+  icon: "check",
+  shortcut: {
+    keys: ["S", "A"],
+  },
+  callback() {
+    const el = getEl("selectAll");
+    el?.click();
+  },
+};
+
+const deleteSelected: Command = {
+  label: "Delete selected",
+  icon: "trash",
+  shortcut: {
+    keys: ["D", "S"],
+  },
+  callback() {
+    const el = getEl("deleteSelected");
+    el?.click();
+  },
+};
+
 function getProjectCommands(inputValue: string): Command[] {
   const selected = getEl("selectAll")?.getAttribute("aria-checked");
   const allSelected = selected === "true";
   const hasSelected = !!selected && selected !== "false";
 
-  const selectedCommands: Command[] = [
-    allSelected
-      ? {
-        label: "Clear selection",
-        icon: "close",
-        shortcut: {
-          keys: ["C", "S"],
-        },
-        callback() {
-          const el = getEl("selectAll");
-          el?.click();
-        },
-      }
-      : {
-        label: "Select all",
-        icon: "check",
-        shortcut: {
-          keys: ["S", "A"],
-        },
-        callback() {
-          const el = getEl("selectAll");
-          el?.click();
-        },
-      },
-    hasSelected
-      ? {
-        label: "Delete selected",
-        icon: "trash",
-        shortcut: {
-          keys: ["D", "S"],
-        },
-        callback() {
-          const el = getEl("deleteSelected");
-          el?.click();
-        },
-      }
-      : undefined,
-  ].filter(Boolean) as Command[];
+  const selectedCommands: Command[] = [];
+
+  if (hasSelected) {
+    selectedCommands.push(clear);
+    selectedCommands.push(deleteSelected);
+  }
+
+  if (!allSelected) {
+    selectedCommands.push(selectAll);
+  }
 
   const promptCommands: Command[] = exists("prompt")
     ? [
