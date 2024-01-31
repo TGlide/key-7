@@ -138,20 +138,23 @@ function getProjectCommands(inputValue: string): Command[] {
       ]),
   ].filter(Boolean) as Command[];
 
+  if (inputValue) {
+    const fields = document.querySelectorAll('[data-test="property-header"]')
+    const fieldCommands = Array.from(fields).map((entity) => {
+      const el = entity as HTMLElement;
+      return {
+        label: `Edit ${el.innerText}`,
+        icon: 'edit',
+        callback() {
+          el.click()
+        },
+      } as Command
+    })
 
-  const fields = document.querySelectorAll('[data-test="property-header"]')
-  const fieldCommands = Array.from(fields).map((entity) => {
-    const el = entity as HTMLElement;
-    return {
-      label: `Edit ${el.innerText}`,
-      icon: 'edit',
-      callback() {
-        el.click()
-      },
-    } as Command
-  })
+    return [...baseCommands, ...fieldCommands];
+  }
 
-  return [...baseCommands, ...fieldCommands];
+  return baseCommands;
 }
 
 const getCommands = (inputValue: string): Command[] => {
