@@ -31,6 +31,7 @@ const inputValue = ref("");
 const ul = ref<HTMLElement | null>(null);
 const innerContent = ref<HTMLElement | null>(null);
 const innerContentHeight = ref(0);
+const scrollContainer = ref<HTMLElement | null>(null);
 
 watch(isLoading, function autoFocusInput($isLoading) {
   if (dialog.value?.open && !$isLoading) {
@@ -38,6 +39,15 @@ watch(isLoading, function autoFocusInput($isLoading) {
       input.value?.focus();
     });
   }
+});
+
+watch(messages, function autoScroll() {
+  sleep(10).then(() => {
+    scrollContainer.value?.scrollTo({
+      top: scrollContainer.value?.scrollHeight,
+      behavior: "smooth",
+    });
+  });
 });
 
 watchEffect(() => {
@@ -199,7 +209,11 @@ function handleInputKeydown(e: KeyboardEvent) {
       />
       <hr />
       <div class="smooth-height" :style="`--height: ${smoothHeight}px`">
-        <div class="immediate-height" :style="`height: ${smoothHeight}px`">
+        <div
+          class="immediate-height"
+          :style="`height: ${smoothHeight}px`"
+          ref="scrollContainer"
+        >
           <div class="inner-content" ref="innerContent">
             <template v-if="panel === 'default'">
               <ul v-if="commands.length" ref="ul">
