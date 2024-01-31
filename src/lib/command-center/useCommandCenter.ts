@@ -43,11 +43,12 @@ function hasDisputing(command: Command, allCommands: Command[]) {
 
 type UseCommandCenterArgs = {
   dialog: Ref<HTMLDialogElement | null>;
+  input: Ref<HTMLInputElement | null>;
   commands: Command[];
 }
 
-export function useCommandCenter({ dialog, commands }: UseCommandCenterArgs) {
-  const { cmd, isMac } = usePlatform();
+export function useCommandCenter({ dialog, input, commands }: UseCommandCenterArgs) {
+  const platform = usePlatform();
   let recentKeyCodes: number[] = [];
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
@@ -115,7 +116,7 @@ export function useCommandCenter({ dialog, commands }: UseCommandCenterArgs) {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     // Toggle on Cmd K
-    if (cmd.value.get(e) && e.key === "k") {
+    if (platform.cmd.value.get(e) && e.key === "k") {
       e.preventDefault();
       if (dialog.value?.open) {
         dialog.value?.close();
@@ -144,11 +145,7 @@ export function useCommandCenter({ dialog, commands }: UseCommandCenterArgs) {
 
       const { keys, cmd, shift, alt } = command.shortcut;
 
-      const isMetaPressed = cmd
-        ? isMac.value
-          ? e.metaKey
-          : e.ctrlKey
-        : !(isMac.value ? e.metaKey : e.ctrlKey);
+      const isMetaPressed = cmd ? platform.cmd.value.get(e) : !platform.cmd.value.get(e);
       const isShiftPressed = shift ? e.shiftKey : !e.shiftKey;
       const isAltPressed = alt ? e.altKey : !e.altKey;
 
@@ -176,8 +173,8 @@ export function useCommandCenter({ dialog, commands }: UseCommandCenterArgs) {
 
   const handleDialogClose = () => {
     highlightedCommand.value = null;
-    // focus the body so that the next keydown event is captured
-    document.body.focus();
+    input.value?.blur()
+
   }
 
 

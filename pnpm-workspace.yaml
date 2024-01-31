@@ -1,6 +1,0 @@
-packages:
-  - lib/*
-  - lib
-  - docs/*
-  - docs
-  - test

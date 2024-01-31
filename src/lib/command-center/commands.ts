@@ -1,4 +1,5 @@
 import { sleep } from "../helpers/sleep";
+import { Icon } from "../icon/types";
 
 
 export type Shortcut = {
@@ -10,6 +11,7 @@ export type Shortcut = {
 
 export type Command = {
   label: string;
+  icon: Icon;
   shortcut?: Shortcut;
   callback: () => void;
 };
@@ -25,6 +27,7 @@ export const commandGroups: CommandGroup[] = [
     commands: [
       {
         label: "Add new entity",
+        icon: 'add',
         shortcut: {
           keys: ["A", "E"],
         },
@@ -40,6 +43,7 @@ export const commandGroups: CommandGroup[] = [
       },
       {
         label: "Add new field",
+        icon: 'add',
         shortcut: {
           keys: ["A", "F"],
         },

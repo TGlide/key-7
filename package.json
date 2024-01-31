@@ -1,9 +1,37 @@
 {
-  "name": "key-7-monorepo",
-  "author": "TGLIDE",
-  "license": "MIT",
+  "name": "key-7",
+  "version": "0.0.10",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/key-7.umd.cjs",
+  "module": "./dist/key-7.js",
+  "exports": {
+    ".": {
+      "import": "./dist/key-7.js",
+      "require": "./dist/key-7.umd.cjs"
+    }
+  },
+  "types": "./dist/lib/index.d.ts",
   "scripts": {
-    "docs": "cd docs && npm run docs:dev && cd ..",
-    "lib": "cd lib && npm run dev && cd .."
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.0.16",
+    "@vueuse/core": "^10.7.2",
+    "vue": "^3.3.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.10",
+    "@vitejs/plugin-vue": "^4.5.2",
+    "path": "^0.12.7",
+    "sass": "^1.70.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "vite-plugin-dts": "^3.7.2",
+    "vue-tsc": "^1.8.25"
   }
 }

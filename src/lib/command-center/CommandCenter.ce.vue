@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useElementBounding } from "@vueuse/core";
+import { computed, ref } from "vue";
 import { usePlatform } from "../composables/usePlatform";
+import { clamp } from "../helpers/clamp";
 import { commandGroups } from "./commands";
 import { useCommandCenter } from "./useCommandCenter";
-import { useElementBounding } from "@vueuse/core";
-import { clamp } from "../helpers/clamp";
+import Icon from "../icon/Icon.vue";
 
 const dialog = ref<HTMLDialogElement | null>(null);
+const input = ref<HTMLInputElement | null>(null);
+
 const ul = ref<HTMLUListElement | null>(null);
 const { height: ulHeight } = useElementBounding(ul);
 const smoothHeight = computed(() => {
@@ -16,8 +19,10 @@ const smoothHeight = computed(() => {
 const { cmd, isMac } = usePlatform();
 const { highlightedCommand } = useCommandCenter({
   dialog,
+  input,
   commands: commandGroups.flatMap((group) => group.commands),
 });
+
 const value = ref("");
 const filteredGroups = computed(() => {
   return commandGroups
@@ -127,7 +132,10 @@ function handleInputKeydown(e: KeyboardEvent) {
               @mouseleave="() => (highlightedCommand = null)"
             >
               <div class="inner">
-                <span class="label">{{ command.label }}</span>
+                <div class="start">
+                  <Icon :icon="command.icon" />
+                  <span class="label">{{ command.label }}</span>
+                </div>
                 <div class="shortcut" v-if="command.shortcut">
                   <kbd class="kbd" v-if="command.shortcut.cmd">
                     {{ cmd.label }}
@@ -251,7 +259,7 @@ hr {
 .smooth-height {
   height: var(--height);
   transition: height 100ms ease;
-  overflow: hidden;
+  overflow-y: hidden;
 }
 
 ul {
@@ -286,6 +294,12 @@ ul {
       padding-inline: 1rem;
 
       user-select: none;
+
+      .start {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
     }
     &[data-highlighted="true"] .inner {
       background-color: $colar-gray-10;
