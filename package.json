@@ -1,6 +1,6 @@
 {
   "name": "key-7",
-  "version": "0.0.10",
+  "version": "0.0.13",
   "type": "module",
   "files": [
     "dist"
@@ -17,7 +17,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublish": "pnpm build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.16",

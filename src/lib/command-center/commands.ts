@@ -54,37 +54,61 @@ export type CommandGroup = {
 //   },
 // ];
 
+const homeCommands: Command[] = [
+  {
+    label: 'Create new project',
+    icon: 'add',
+    shortcut: {
+      keys: ['C'],
+    },
+    callback() {
+      console.log('Create new project');
+      const el = document.querySelector('div.shrink-0:nth-child(2)') as HTMLElement | null
+      el?.click()
+    },
+  }
+]
+const projectCommands: Command[] = [
+  {
+    label: "Add new entity",
+    icon: "add",
+    shortcut: {
+      keys: ["A", "E"],
+    },
+    async callback() {
+      document
+        .querySelector("[data-test='add-entity']")
+        ?.dispatchEvent(new MouseEvent("click"));
+      await sleep(500);
+      // get last data-test="row-n"
+      const lastRow = document.querySelector(
+        "[data-test^='row-']:last-child"
+      );
+      const firstCell = lastRow?.querySelector("[data-test^='cell-']");
+      firstCell?.dispatchEvent(new MouseEvent("click"));
+      console.log("Add new entity - new");
+    },
+  },
+  {
+    label: "Add new field",
+    icon: "add",
+    shortcut: {
+      keys: ["A", "F"],
+    },
+    callback() {
+      console.log("Add new field");
+    },
+  },
+];
+
 export const getCommands = (): Command[] => {
-  return [
-    {
-      label: "Add new entity",
-      icon: "add",
-      shortcut: {
-        keys: ["A", "E"],
-      },
-      async callback() {
-        document
-          .querySelector("[data-test='add-entity']")
-          ?.dispatchEvent(new MouseEvent("click"));
-        await sleep(150);
-        // get last data-test="row-n"
-        const lastRow = document.querySelector(
-          "[data-test^='row-']:last-child"
-        );
-        const firstCell = lastRow?.querySelector("[data-test^='cell-']");
-        firstCell?.dispatchEvent(new MouseEvent("click"));
-        console.log("Add new entity - new");
-      },
-    },
-    {
-      label: "Add new field",
-      icon: "add",
-      shortcut: {
-        keys: ["A", "F"],
-      },
-      callback() {
-        console.log("Add new field");
-      },
-    },
-  ];
+  if (window.location.origin !== 'https://agidb.v7labs.com') {
+    return [...homeCommands, ...projectCommands]
+  }
+
+  if (window.location.pathname.endsWith('/projects')) {
+    return [...homeCommands]
+  }
+
+  return [...projectCommands]
 };
