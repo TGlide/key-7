@@ -114,6 +114,8 @@ function getProjectCommands(inputValue: string): Command[] {
 
           const template = `Reply with ${name.value} only. Do not say any extra info, the reply should be exclusively an objective answer without extra padding.`;
           el.value = template;
+          el.click();
+          el.focus();
         },
       },
     ]

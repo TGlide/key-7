@@ -174,11 +174,12 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
     highlightedCommand.value = null;
     sleep(150).then(() => {
       inputValue.value = "";
+
+      if (document.activeElement?.tagName === 'COMMAND-CENTER') {
+        input.value?.blur();
+        document.body.click();
+      }
     })
-    if (document.activeElement?.tagName === 'COMMAND-CENTER') {
-      input.value?.blur();
-      document.body.click();
-    }
 
   };
 
