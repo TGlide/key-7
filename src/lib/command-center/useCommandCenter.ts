@@ -1,4 +1,4 @@
-import { Ref, onMounted, onUnmounted, ref } from "vue";
+import { Ref, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
 import { Command, getCommands } from "./commands";
@@ -114,7 +114,13 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
     }
   };
 
+  let prevUrl = "";
   const handleKeyDown = (e: KeyboardEvent) => {
+    if (window.location.href !== prevUrl) {
+      commands.value = getCommands();
+      prevUrl = window.location.href;
+    }
+
     // Toggle on Cmd K
     if (platform.cmd.value.get(e) && e.key === "k") {
       e.preventDefault();
@@ -177,28 +183,16 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
     input.value?.blur();
   };
 
-  // mutation observer on url change
-  let windowObserver: MutationObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === "attributes" && mutation.attributeName === "href") {
-        commands.value = getCommands();
-      }
-    });
-  });
-
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     dialog.value?.addEventListener("pointerdown", handleDialogPointerDown);
     dialog.value?.addEventListener("close", handleDialogClose);
-
-    windowObserver.observe(document.body, { childList: true, subtree: true });
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
     dialog.value?.removeEventListener("pointerdown", handleDialogPointerDown);
     dialog.value?.removeEventListener("close", handleDialogClose);
-    windowObserver.disconnect();
   });
 
   return { highlightedCommand, commands };
