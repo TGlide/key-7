@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useElementBounding } from "@vueuse/core";
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { clamp } from "../helpers/clamp";
 import Icon from "../icon/Icon.vue";
@@ -30,6 +30,32 @@ const { highlightedCommand, commands } = useCommandCenter({
   dialog,
   input,
   inputValue,
+});
+
+watchEffect(() => {
+  input.value;
+  if (!commands.value.length) {
+    highlightedCommand.value = null;
+  } else if (
+    highlightedCommand.value &&
+    highlightedCommand.value >= commands.value.length
+  ) {
+    highlightedCommand.value = commands.value.length - 1;
+  } else if (highlightedCommand.value === null) {
+    highlightedCommand.value = 0;
+  }
+});
+
+watchEffect(() => {
+  // scroll to highlighted command
+  if (highlightedCommand.value !== null && ul.value) {
+    const highlightedCommandEl = ul.value.children[
+      highlightedCommand.value
+    ] as HTMLLIElement;
+    highlightedCommandEl.scrollIntoView({
+      block: "nearest",
+    });
+  }
 });
 
 function handleInputKeydown(e: KeyboardEvent) {
@@ -266,6 +292,7 @@ ul {
     font-size: 0.875rem;
     padding-block: 0.125rem; // Give padding so it's still clickable, but looks separated from the group
     padding-inline: 0.5rem;
+    scroll-margin-block: 0.5rem;
 
     .inner {
       display: flex;

@@ -58,13 +58,17 @@ const homeCommands: Command[] = [
   },
 ];
 
-function getProjectCommands(inputValue: string): Command[] {
-  const selectBox = getEl("selectBox");
-  const allSelected = selectBox?.getAttribute("aria-checked") === "true";
+type Panel = "home" | "ai";
+export const panel = ref<Panel>("home");
 
-  const selectedCommands: Command[] = allSelected
-    ? [
-      {
+function getProjectCommands(inputValue: string): Command[] {
+  const selected = getEl("selectBox")?.getAttribute("aria-checked");
+  const allSelected = selected === "true";
+  const hasSelected = !!selected && selected !== "false";
+
+  const selectedCommands: Command[] = [
+    allSelected
+      ? {
         label: "Clear selection",
         icon: "close",
         shortcut: {
@@ -74,21 +78,8 @@ function getProjectCommands(inputValue: string): Command[] {
           const el = getEl("selectAll");
           el?.click();
         },
-      },
-      {
-        label: "Delete selected",
-        icon: "trash",
-        shortcut: {
-          keys: ["D", "S"],
-        },
-        callback() {
-          const el = getEl("deleteSelected");
-          el?.click();
-        },
-      },
-    ]
-    : [
-      {
+      }
+      : {
         label: "Select all",
         icon: "check",
         shortcut: {
@@ -99,7 +90,20 @@ function getProjectCommands(inputValue: string): Command[] {
           el?.click();
         },
       },
-    ];
+    hasSelected
+      ? {
+        label: "Delete selected",
+        icon: "trash",
+        shortcut: {
+          keys: ["D", "S"],
+        },
+        callback() {
+          const el = getEl("deleteSelected");
+          el?.click();
+        },
+      }
+      : undefined,
+  ].filter(Boolean) as Command[];
 
   const promptCommands: Command[] = exists("prompt")
     ? [
@@ -122,6 +126,13 @@ function getProjectCommands(inputValue: string): Command[] {
     : [];
 
   const baseCommands: Array<Command> = [
+    {
+      label: "Ask our AI",
+      icon: "ai",
+      callback() {
+        panel.value = "ai";
+      },
+    },
     ...promptCommands,
     {
       label: "Add new entity",
@@ -155,6 +166,7 @@ function getProjectCommands(inputValue: string): Command[] {
         el?.click();
       },
     },
+    ...selectedCommands,
     {
       label: "Go home",
       icon: "home",
@@ -165,7 +177,6 @@ function getProjectCommands(inputValue: string): Command[] {
         window.location.href = "https://agidb.v7labs.com/";
       },
     },
-    ...selectedCommands,
   ];
 
   if (inputValue) {
@@ -209,15 +220,12 @@ export function useCommands({ inputValue }: UseCommandsArgs) {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     // ensure that shortcuts are updated
-    if (!isInputEvent(e)) {
-      commands.value = getCommands(inputValue.value);
-    }
+    commands.value = getCommands(inputValue.value);
   };
 
   watchEffect(() => {
     // When the input value changes, update the commands
-    // We need this since we're limiting input events
-    // on the handleKeyDown function
+    // We need this to ocassionally avoid racing conditions
     commands.value = getCommands(inputValue.value);
   });
 

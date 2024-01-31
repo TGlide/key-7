@@ -1,7 +1,7 @@
 import { Ref, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
-import { Command, useCommands } from "./commands";
+import { Command, panel, useCommands } from "./commands";
 import { isInputEvent } from "../helpers/dom";
 import { sleep } from "../helpers/sleep";
 
@@ -174,6 +174,7 @@ export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenter
     highlightedCommand.value = null;
     sleep(150).then(() => {
       inputValue.value = "";
+      panel.value = 'home'
 
       if (document.activeElement?.tagName === 'COMMAND-CENTER') {
         input.value?.blur();
