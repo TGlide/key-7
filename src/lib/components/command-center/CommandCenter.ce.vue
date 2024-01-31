@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRafFn } from "@vueuse/core";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, onMounted, ref, watch, watchEffect } from "vue";
 import { usePlatform } from "@/lib/composables/usePlatform";
 import { clamp } from "@/lib/helpers/clamp";
 import Icon from "@/lib/components/icon/Icon.vue";
@@ -24,7 +24,7 @@ const innerContent = ref<HTMLElement | null>(null);
 const innerContentHeight = ref(0);
 const scrollContainer = ref<HTMLElement | null>(null);
 
-/* Animations */
+/* Animations & Styling */
 useRafFn(() => {
   if (innerContent.value) {
     innerContentHeight.value = +getComputedStyle(
@@ -36,6 +36,10 @@ useRafFn(() => {
 });
 const smoothHeight = computed(() => {
   return clamp(52, innerContentHeight.value, 300);
+});
+
+onMounted(() => {
+  document.documentElement.style.setProperty("color-scheme", "dark");
 });
 
 /* AI */
