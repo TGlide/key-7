@@ -28,7 +28,10 @@ Copy-paste this in your browser's console:
 
 ```javascript
 var script = document.createElement("script");
-script.setAttribute("src", "https://cdn.jsdelivr.net/npm/key-7/dist/key-7.js");
+script.setAttribute(
+  "src",
+  "https://cdn.jsdelivr.net/npm/key-7@0.0.36/dist/key-7.js"
+);
 script.setAttribute("type", "module");
 script.setAttribute("id", "key-7");
 document.head.appendChild(script);

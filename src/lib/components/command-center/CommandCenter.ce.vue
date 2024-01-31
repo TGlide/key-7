@@ -344,7 +344,7 @@ dialog {
   display: block;
   inset: 0;
   margin-inline: auto;
-  margin-block-start: min(40vh, 35rem);
+  margin-block-start: min(30vh, 26.25rem);
   opacity: 0;
   --scale-from: 0.95;
 
