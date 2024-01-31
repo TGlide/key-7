@@ -15,10 +15,6 @@ function openCommandCenter() {
   const dialog = cmdCenter?.shadowRoot?.querySelector("dialog");
   dialog?.showModal();
 }
-
-function cool() {
-  window.history.pushState({}, "", "/" + Math.random());
-}
 </script>
 
 <template>
@@ -27,8 +23,7 @@ function cool() {
     <button @click="openCommandCenter">
       or just press me, that's fine too!
     </button>
-    <command-center ref="" />
-    <button @click="cool">change href</button>
+    <command-center />
   </main>
 </template>
 

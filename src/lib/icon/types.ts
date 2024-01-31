@@ -1,1 +1,1 @@
-export type Icon = 'add' | 'home'
+export type Icon = 'add' | 'home' | 'check' | 'trash' | 'close'

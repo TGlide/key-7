@@ -10,6 +10,7 @@ import { useCommandCenter } from "./useCommandCenter";
 
 const dialog = ref<HTMLDialogElement | null>(null);
 const input = ref<HTMLInputElement | null>(null);
+const inputValue = ref("");
 
 const ul = ref<HTMLUListElement | null>(null);
 const ulHeight = ref(0);
@@ -28,19 +29,7 @@ const { cmd, isMac } = usePlatform();
 const { highlightedCommand, commands } = useCommandCenter({
   dialog,
   input,
-});
-
-const value = ref("");
-const filteredCommands = computed(() => {
-  return commands.value.filter((command) => {
-    return (
-      command.label.toLowerCase().includes(value.value.toLowerCase()) ||
-      command.shortcut?.keys
-        .join(" ")
-        .toLowerCase()
-        .includes(value.value.toLowerCase())
-    );
-  });
+  inputValue,
 });
 
 function handleInputKeydown(e: KeyboardEvent) {
@@ -102,15 +91,15 @@ function handleInputKeydown(e: KeyboardEvent) {
         placeholder="Search for commands"
         ref="input"
         @keydown="handleInputKeydown"
-        v-model="value"
+        v-model="inputValue"
       />
       <hr />
       <div class="smooth-height" :style="`--height: ${smoothHeight}px`">
         <div class="immediate-height" :style="`height: ${smoothHeight}px`">
-          <ul v-if="filteredCommands.length" ref="ul">
+          <ul v-if="commands.length" ref="ul">
             <li
               class="command"
-              v-for="(command, i) in filteredCommands"
+              v-for="(command, i) in commands"
               :data-highlighted="highlightedCommand === i"
               @click="
                 () => {
@@ -259,7 +248,7 @@ hr {
 
 ul {
   list-style: none;
-  padding-block: 0.25rem;
+  padding-block: 0.5rem;
 
   .group {
     color: $colar-gray-7;

@@ -1,4 +1,4 @@
-import { Ref, onMounted, onUnmounted, ref } from "vue";
+import { Ref, computed, onMounted, onUnmounted, ref } from "vue";
 import { sleep } from "../helpers/sleep";
 import { Icon } from "../icon/types";
 import { isInputEvent } from "../helpers/dom";
@@ -99,7 +99,7 @@ function getProjectCommands(): Command[] {
       ? [
         {
           label: "Clear selection",
-          // icon: 'clear',
+          icon: 'close',
           shortcut: {
             keys: ["C", "S"],
           },
@@ -110,6 +110,7 @@ function getProjectCommands(): Command[] {
         },
         {
           label: "Delete selected",
+          icon: 'trash',
           shortcut: {
             keys: ["D", "S"],
           },
@@ -122,6 +123,7 @@ function getProjectCommands(): Command[] {
       : [
         {
           label: "Select all",
+          icon: 'check',
           shortcut: {
             keys: ["S", "A"],
           },
@@ -136,7 +138,7 @@ function getProjectCommands(): Command[] {
 
 const getCommands = (): Command[] => {
   if (window.location.origin !== "https://agidb.v7labs.com") {
-    return [...homeCommands, ...homeCommands, ...homeCommands, ...homeCommands, ...getProjectCommands()];
+    return [...homeCommands, ...getProjectCommands()];
   }
 
   if (window.location.pathname.endsWith("/projects")) {
@@ -147,10 +149,10 @@ const getCommands = (): Command[] => {
 };
 
 type UseCommandsArgs = {
-  dialog: Ref<HTMLDialogElement | null>;
+  inputValue: Ref<string>;
 };
 
-export function useCommands({ dialog }: UseCommandsArgs) {
+export function useCommands({ inputValue }: UseCommandsArgs) {
   const commands = ref(getCommands());
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -167,5 +169,17 @@ export function useCommands({ dialog }: UseCommandsArgs) {
     window.removeEventListener("keydown", handleKeyDown);
   });
 
-  return commands;
+  const filteredCommands = computed(() => {
+    return commands.value.filter((command) => {
+      return (
+        command.label.toLowerCase().includes(inputValue.value.toLowerCase()) ||
+        command.shortcut?.keys
+          .join(" ")
+          .toLowerCase()
+          .includes(inputValue.value.toLowerCase())
+      );
+    });
+  });
+
+  return filteredCommands;
 }

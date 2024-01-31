@@ -3,6 +3,7 @@ import { usePlatform } from "../composables/usePlatform";
 import { debounce } from "../helpers/debounce";
 import { Command, useCommands } from "./commands";
 import { isInputEvent } from "../helpers/dom";
+import { sleep } from "../helpers/sleep";
 
 function getCommandRank(command: Command) {
   if (!command.shortcut) return 0;
@@ -39,12 +40,13 @@ function hasDisputing(command: Command, allCommands: Command[]) {
 type UseCommandCenterArgs = {
   dialog: Ref<HTMLDialogElement | null>;
   input: Ref<HTMLInputElement | null>;
+  inputValue: Ref<string>;
 };
 
-export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
+export function useCommandCenter({ dialog, input, inputValue }: UseCommandCenterArgs) {
   const platform = usePlatform();
   let recentKeyCodes: number[] = [];
-  const commands = useCommands({ dialog })
+  const commands = useCommands({ inputValue })
   let validCommands: Command[] = [];
   const highlightedCommand = ref<number | null>(null);
 
@@ -171,6 +173,10 @@ export function useCommandCenter({ dialog, input }: UseCommandCenterArgs) {
   const handleDialogClose = () => {
     highlightedCommand.value = null;
     input.value?.blur();
+    sleep(150).then(() => {
+      inputValue.value = "";
+    })
+    document.body.click();
   };
 
   onMounted(() => {
